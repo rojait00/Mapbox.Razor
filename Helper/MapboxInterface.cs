@@ -1,5 +1,6 @@
 ﻿using BAMCIS.GeoJSON;
 using Mapbox.Razor.Models;
+using Mapbox.Razor.Models.Controls;
 using Microsoft.Extensions.Logging;
 using Microsoft.JSInterop;
 using Microsoft.JSInterop.Implementation;
@@ -12,7 +13,7 @@ using System.Threading.Tasks;
 
 namespace Mapbox.Razor.Helper
 {
-    internal class MapboxInterface : IAsyncDisposable
+    public class MapboxInterface : IAsyncDisposable
     {
         private readonly Lazy<Task<IJSObjectReference>> moduleTask;
         private readonly DotNetObjectReference<MapboxInterface> mapInterfaceRef;
@@ -31,16 +32,34 @@ namespace Mapbox.Razor.Helper
         internal async ValueTask<string> InitAsync()
         {
             var module = await moduleTask.Value;
-            return await module.InvokeAsync<string>("initMap", mapConfiguration.GetJson(), mapInterfaceRef);
+            return await module.InvokeAsync<string>("initMap", mapInterfaceRef, mapConfiguration.GetJson());
         }
 
-        internal async Task HandleOnMapLoadAsync()
+        [JSInvokableAttribute("HandleOnMapLoadAsync")]
+        public async Task HandleOnMapLoadAsync()
         {
             await AddSourcesAsync();
             await AddLayersAsync();
+            await AddControlsAsync();
         }
 
-        internal async Task AddSourcesAsync()
+        private async Task AddControlsAsync()
+        {
+            var module = await moduleTask.Value;
+            foreach (var control in mapConfiguration.Controls)
+            {
+                if (control is FullscreenControl)
+                {
+                    await module.InvokeAsync<string>("addFullscreenControl", control.Id, control.GetJson());
+                }
+                else
+                {
+                    await module.InvokeAsync<string>("addControl", control.Id, control.GetJson());
+                }
+            }
+        }
+
+        private async Task AddSourcesAsync()
         {
             var module = await moduleTask.Value;
             foreach (var source in mapConfiguration.Sources)
@@ -49,7 +68,7 @@ namespace Mapbox.Razor.Helper
             }
         }
 
-        internal async Task AddLayersAsync()
+        private async Task AddLayersAsync()
         {
             var module = await moduleTask.Value;
             foreach (var layer in mapConfiguration.Layers)
@@ -62,6 +81,12 @@ namespace Mapbox.Razor.Helper
         {
             var module = await moduleTask.Value;
             await module.InvokeAsync<string>("removeSource", id);
+        }
+
+        internal async Task RemoveControlAsync(string id)
+        {
+            var module = await moduleTask.Value;
+            await module.InvokeAsync<string>("removeControl", id);
         }
 
         internal async Task RemoveLayerAsync(string id)
@@ -86,6 +111,24 @@ namespace Mapbox.Razor.Helper
         {
             var module = await moduleTask.Value;
             await module.InvokeAsync<string>("addOnMapClickEventlistner", mapInterfaceRef);
+        }
+
+        [JSInvokableAttribute("HandleEvent")]
+        public void HandleEvent(string onEventId, string forLayer)
+        {
+
+        }
+
+        [JSInvokableAttribute("HandleLayerClickEvent")]
+        public void HandleLayerClickEvent(string forLayer, double lat, double lng, string description)
+        {
+
+        }
+
+        [JSInvokableAttribute("HandleMapClickEvent")]
+        public void HandleMapClickEvent(double lat, double lng, string description)
+        {
+
         }
 
 

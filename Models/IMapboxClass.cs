@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Mapbox.Razor.Models
 {
-    internal interface IMapboxClass
+    public interface IMapboxClass
     {
     }
 }

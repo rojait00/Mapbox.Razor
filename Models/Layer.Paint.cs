@@ -8,40 +8,40 @@ namespace Mapbox.Razor.Models
         public class PaintDetails : IMapboxClass
         {
             [JsonProperty("line-color")]
-            public string LineColor { get; set; } = "#000000";
+            public dynamic? LineColor { get; set; }
 
             [JsonProperty("line-width")]
-            public int? LineWidth { get; set; }
+            public List<dynamic>? LineWidth { get; set; }
 
             [JsonProperty("fill-color")]
-            public string? FillColor { get; set; }
+            public dynamic? FillColor { get; set; }
 
             /// <summary>
             /// Optional number between 0 and 1 inclusive.
             /// </summary>
             [JsonProperty("fill-opacity")]
-            public double FillOpacity { get; set; } = 1;
+            public List<dynamic>? FillOpacity { get; set; }
 
             [JsonProperty("fill-pattern")]
-            public string? FillPattern { get; set; }
+            public dynamic? FillPattern { get; set; }
 
             [JsonProperty("raster-fade-duration")]
-            public int? RasterFadeDuration { get; set; }
+            public double? RasterFadeDuration { get; set; }
 
-            [JsonProperty("line-opacity")]
-            public double? LineOpacity { get; set; }
+            //[JsonProperty("line-opacity")]
+            //public List<dynamic>? LineOpacity { get; set; }
 
             [JsonProperty("background-color")]
-            public string? BackgroundColor { get; set; }
+            public dynamic? BackgroundColor { get; set; }
 
             [JsonProperty("circle-radius")]
-            public double? CircleRadius { get; set; }
+            public dynamic? CircleRadius { get; set; }
 
             [JsonProperty("circle-color")]
-            public string CircleColor { get; set; } = "#000000";
+            public dynamic? CircleColor { get; set; }
 
             [JsonProperty("fill-extrusion-color")]
-            public string FillExtrusionColor { get; set; } = "#000000";
+            public dynamic? FillExtrusionColor { get; set; }
 
             [JsonProperty("fill-extrusion-opacity")]
             public double? FillExtrusionOpacity { get; set; }
@@ -53,13 +53,13 @@ namespace Mapbox.Razor.Models
             public double? FillExtrusionBase { get; set; }
 
             [JsonProperty("circle-stroke-width")]
-            public int? CircleStrokeWidth { get; set; }
+            public double? CircleStrokeWidth { get; set; }
 
             [JsonProperty("circle-stroke-color")]
-            public string? CircleStrokeColor { get; set; }
+            public dynamic? CircleStrokeColor { get; set; }
 
             [JsonProperty("line-gradient")]
-            public string? LineGradient { get; set; }
+            public dynamic? LineGradient { get; set; }
 
             [JsonProperty("heatmap-weight")]
             public double? HeatmapWeight { get; set; }
@@ -68,10 +68,10 @@ namespace Mapbox.Razor.Models
             public double? HeatmapIntensity { get; set; }
 
             [JsonProperty("heatmap-color")]
-            public string? HeatmapColor { get; set; }
+            public dynamic? HeatmapColor { get; set; }
 
             [JsonProperty("heatmap-radius")]
-            public string? HeatmapRadius { get; set; }
+            public dynamic? HeatmapRadius { get; set; }
 
             [JsonProperty("heatmap-opacity")]
             public double? HeatmapOpacity { get; set; }
@@ -80,7 +80,7 @@ namespace Mapbox.Razor.Models
             public double? CircleOpacity { get; set; }
 
             [JsonProperty("text-color")]
-            public string? TextColor { get; set; }
+            public dynamic? TextColor { get; set; }
         }
     }
 }

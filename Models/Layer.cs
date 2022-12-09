@@ -29,15 +29,15 @@ namespace Mapbox.Razor.Models
         public string? SourceLayer { get; set; }
 
         [JsonProperty("filter")]
-        public List<object>? Filter { get; set; }
+        public List<dynamic>? Filter { get; set; }
 
         [JsonProperty("minzoom")]
-        public int? MinZoom { get; set; }
+        public double? MinZoom { get; set; }
 
         [JsonProperty("maxzoom")]
-        public int? MaxZoom { get; set; }
+        public double? MaxZoom { get; set; }
 
         [JsonProperty("metadata")]
-        public string? MeteData { get; set; }
+        public dynamic? MeteData { get; set; }
     }
 }

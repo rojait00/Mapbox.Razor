@@ -1,5 +1,7 @@
 ﻿using BAMCIS.GeoJSON;
+using Mapbox.Razor.Models.Controls;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace Mapbox.Razor.Models
 {
@@ -11,6 +13,46 @@ namespace Mapbox.Razor.Models
 
         [JsonIgnore]
         public List<Layer> Layers { get; set; } = new List<Layer>();
+
+        [JsonIgnore]
+        public List<IControl> Controls { get; set; } = new List<IControl>();
+
+        [JsonProperty("sprite")]
+        public string? Sprite { get; set; }
+
+        [JsonProperty("metadata")]
+        public dynamic? MetaData { get; set; }
+
+        [JsonProperty("created")]
+        public string? Created { get; set; }
+
+        [JsonProperty("modified")]
+        public string? Modified { get; set; }
+
+        [JsonProperty("id")]
+        public string? Id { get; set; }
+
+        [JsonProperty("owner")]
+        public string? Owner { get; set; }
+
+        [JsonProperty("visibility")]
+        public string? Visibility { get; set; }
+
+        [JsonProperty("protected")]
+        public bool? Protected { get; set; }
+
+        [JsonProperty("draft")]
+        public bool? Draft { get; set; }
+
+        [JsonProperty("version")]
+        public int? Version { get; set; }
+
+        [JsonProperty("name")]
+        public string? Name { get; set; }
+
+        [JsonProperty("glyphs")]
+        public string? Glyphs { get; set; }
+
 
         #region generated https://docs.mapbox.com/mapbox-gl-js/api/map/
         ///<summary>
@@ -107,8 +149,7 @@ namespace Mapbox.Razor.Models
         ///If true , the "drag to pan" interaction is enabled. An Object value is passed as options to DragPanHandler#enable .
         ///</summary>
         [JsonProperty("dragPan")]
-        public string DragPan
-        { get; set; } = "true";
+        public dynamic? DragPan { get; set; }
 
         ///<summary>
         ///If true , the "drag to rotate" interaction is enabled (see DragRotateHandler ).
@@ -132,13 +173,13 @@ namespace Mapbox.Razor.Models
         ///A Map#fitBounds options object to use only when fitting the initial bounds provided above.
         ///</summary>
         [JsonProperty("fitBoundsOptions")]
-        public Object? FitBoundsOptions { get; set; }
+        public dynamic? FitBoundsOptions { get; set; }
 
         ///<summary>
         ///If true , the map's position (zoom, center latitude, center longitude, bearing, and pitch) will be synced with the hash fragment of the page's URL. For example, http://path/to/my/page.html#2.59/39.26/53.07/-24.1/60 . An additional string may optionally be provided to indicate a parameter-styled hash, for example http://path/to/my/page.html#map=2.59/39.26/53.07/-24.1/60&foo=bar , where foo is a custom parameter and bar is an arbitrary hash distinct from the map hash.
         ///</summary>
         [JsonProperty("hash")]
-        public string Hash { get; set; } = "false";
+        public dynamic? Hash { get; set; }
 
         ///<summary>
         ///If false , no mouse, touch, or keyboard listeners will be attached to the map, so it will not respond to interaction.
@@ -162,13 +203,13 @@ namespace Mapbox.Razor.Models
         ///A patch to apply to the default localization table for UI strings such as control tooltips. The locale object maps namespaced UI string IDs to translated strings in the target language; see src/ui/default_locale.js for an example with all supported string IDs. The object may specify all UI strings (thereby adding support for a new translation) or only a subset of strings (thereby patching the default translation table).
         ///</summary>
         [JsonProperty("locale")]
-        public Object? Locale { get; set; } = null;
+        public dynamic? Locale { get; set; }
 
         ///<summary>
         ///Defines a CSS font-family for locally overriding generation of all glyphs. Font settings from the map's style will be ignored, except for font-weight keywords (light/regular/medium/bold). If set, this option overrides the setting in localIdeographFontFamily.
         ///</summary>
         [JsonProperty("localFontFamily")]
-        public string LocalFontFamily { get; set; } = "false";
+        public dynamic? LocalFontFamily { get; set; }
 
         ///<summary>
         ///Defines a CSS font-family for locally overriding generation of glyphs in the 'CJK Unified Ideographs', 'Hiragana', 'Katakana', 'Hangul Syllables' and 'CJK Symbols and Punctuation' ranges. In these ranges, font settings from the map's style will be ignored, except for font-weight keywords (light/regular/medium/bold). Set to false , to enable font settings from the map's style for these glyph ranges. Note that Mapbox Studio sets this value to false by default. The purpose of this option is to avoid bandwidth-intensive glyph server requests. For an example of this option in use, see Use locally generated ideographs .
@@ -266,8 +307,7 @@ namespace Mapbox.Razor.Models
         ///Winkel Tripel azimuthal map projection as winkelTripel Conic projections such as Albers and Lambert have configurable center and parallels properties that allow developers to define the region in which the projection has minimal distortion; see the example for how to configure these properties.
         ///</summary>
         [JsonProperty("projection")]
-        public string? Projection { get; set; }
-        //public ProjectionSpecification Projection { get; set; } = "mercator";
+        public dynamic? Projection { get; set; }
 
         ///<summary>
         ///If false , the map won't attempt to re-request tiles once they expire per their HTTP cacheControl / expires headers.
@@ -307,6 +347,7 @@ namespace Mapbox.Razor.Models
         [JsonProperty("style")]
         public string? Style { get; set; }
 
+
         ///<summary>
         ///Silences errors and warnings generated due to an invalid accessToken, useful when using the library to write unit tests.
         ///</summary>
@@ -334,9 +375,8 @@ namespace Mapbox.Razor.Models
         ///<summary>
         ///A callback run before the Map makes a request for an external URL. The callback can be used to modify the url, set headers, or set the credentials property for cross-origin requests. Expected to return a RequestParameters object with a url property and optionally headers and credentials properties.
         ///</summary>
-        //public RequestTransformFunction? TransformRequest { get; set; } = null;
         [JsonProperty("transformRequest")]
-        public string? TransformRequest { get; set; } = null;
+        public dynamic? TransformRequest { get; set; } = null;
 
         ///<summary>
         ///Sets the map's worldview. A worldview determines the way that certain disputed boundaries are rendered. By default, GL JS will not set a worldview so that the worldview of Mapbox tiles will be determined by the vector tile source's TileJSON. Valid worldview strings must be an ISO alpha-2 country code . Unsupported ISO alpha-2 codes will fall back to the TileJSON's default worldview. Invalid codes will result in a recoverable error.

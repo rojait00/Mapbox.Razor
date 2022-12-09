@@ -8,16 +8,16 @@ namespace Mapbox.Razor.Models
         public class LayoutDetails : IMapboxClass
         {
             [JsonProperty("icon-image")]
-            public string? IconImage { get; set; }
+            public dynamic? IconImage { get; set; }
 
             [JsonProperty("line-join")]
-            public string? LineJoin { get; set; }
+            public dynamic? LineJoin { get; set; }
 
-            [JsonProperty("line-cap")]
-            public string? LineCap { get; set; }
+            //[JsonProperty("line-cap")]
+            //public List<dynamic>? LineCap { get; set; }
 
             [JsonProperty("text-field")]
-            public string? TextField { get; set; }
+            public dynamic? TextField { get; set; }
 
             [JsonProperty("icon-text-fit")]
             public string? IconTextFit { get; set; }
@@ -38,19 +38,19 @@ namespace Mapbox.Razor.Models
             public List<double>? TextOffset { get; set; }
 
             [JsonProperty("text-anchor")]
-            public string? TextAnchor { get; set; }
+            public dynamic? TextAnchor { get; set; }
 
             [JsonProperty("icon-rotate")]
             public double? IconRotate { get; set; }
 
             [JsonProperty("icon-rotation-alignment")]
-            public string? IconRotationAlignment { get; set; }
+            public dynamic? IconRotationAlignment { get; set; }
 
             [JsonProperty("icon-ignore-placement")]
             public bool? IconIgnorePlacement { get; set; }
 
             [JsonProperty("text-size")]
-            public double? TextSize { get; set; }
+            public List<dynamic>? TextSize { get; set; }
         }
     }
 }

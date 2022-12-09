@@ -25,7 +25,7 @@ namespace Mapbox.Razor.Models
         public int? TileSize { get; set; }
 
         [JsonProperty("maxzoom")]
-        public int? Maxzoom { get; set; }
+        public double? Maxzoom { get; set; }
 
         [JsonProperty("canvas")]
         public string? Canvas { get; set; }
@@ -47,7 +47,7 @@ namespace Mapbox.Razor.Models
         public List<string>? Tiles { get; set; }
 
         [JsonProperty("minzoom")]
-        public int? Minzoom { get; set; }
+        public double? Minzoom { get; set; }
 
         [JsonProperty("lineMetrics")]
         public bool? LineMetrics { get; set; }
@@ -56,9 +56,9 @@ namespace Mapbox.Razor.Models
         public bool? Cluster { get; set; }
 
         [JsonProperty("clusterMaxZoom")]
-        public int? ClusterMaxZoom { get; set; }
+        public double? ClusterMaxZoom { get; set; }
 
         [JsonProperty("clusterRadius")]
-        public int? ClusterRadius { get; set; }
+        public double? ClusterRadius { get; set; }
     }
 }

@@ -1,53 +1,79 @@
 ﻿export function initMap(mapInterfaceRef, mapConfigurationJson) {
-    mapConfiguration = JSON.parse(sourceJson);
+    var mapConfiguration = JSON.parse(mapConfigurationJson);
 
-    mapboxgl.accessToken = mapConfiguration.acessToken;
-    const map = new mapboxgl.Map({
-        container: containerId,
-        style: styleUrl,
-        center: [startingPositionLong, startingPositionLat],
-        zoom: startingZoom
-    });
+    window.map = new mapboxgl.Map(mapConfiguration);
 
-    map.on('load', () => {
+    window.map.on('load', () => {
         {
-            mapInterfaceRef.invokeMethodeAsync("HandleOnMapLoad");
+            mapInterfaceRef.invokeMethodAsync("HandleOnMapLoadAsync");
         }
     });
 }
 
 export function addSource(id, sourceJson) {
-    map.addSource(id, JSON.parse(sourceJson));
-}
-
-export function addLayer(layerJson) {
-    map.addLayer(JSON.parse(layerJson));
+    window.map.addSource(id, JSON.parse(sourceJson));
 }
 
 export function removeSource(id) {
-    map.removeSource(id);
+    window.map.removeSource(id);
+}
+
+export function addLayer(layerJson) {
+    window.map.addLayer(JSON.parse(layerJson));
 }
 
 export function removeLayer(id) {
-    map.removeLayer(id);
+    window.map.removeSource(id);
+}
+
+export function addControl(type, controlJson) {
+    var controlConfig = JSON.parse(controlJson);
+    var controlObj;
+
+    switch (type) {
+        case 'fullscreen_control_id':
+            controlObj.container = $(controlObj.container);
+            controlObj = new mapboxgl.FullscreenControl(controlConfig);
+            break;
+        case 'geo_locate_control_id':
+            controlObj = new mapboxgl.GeolocateControl(controlConfig);
+            break;
+        case 'navigation_control_id':
+            controlObj = new mapboxgl.NavigationControl(controlConfig);
+            break;
+        case 'scale_control_id':
+            controlObj = new mapboxgl.ScaleControl(controlConfig);
+            break;
+        default:
+            return;
+    }
+
+
+    window.mapControls[id] = controlObj
+    window.map.addControl(controlObj);
+}
+
+export function removeControl(id) {
+    var controlObj = window.mapControls[id];
+    window.map.removeControl(controlObj);
 }
 
 export function addEventlistner(onEventId, forLayer, mapInterfaceRef) {
-    map.on(onEventId, forLayer, () => {
-        mapInterfaceRef.invokeMethodeAsync("HandleEvent", onEventId, forLayer);
+    window.map.on(onEventId, forLayer, () => {
+        mapInterfaceRef.invokeMethodAsync("HandleEvent", onEventId, forLayer);
     });
 }
 
 export function addOnLayerClickEventlistner(forLayer, mapInterfaceRef) {
-    map.on(onEventId, forLayer, () => {
+    window.map.on(onEventId, forLayer, () => {
         var description = e.features[0].properties.description;
-        mapInterfaceRef.invokeMethodeAsync("HandleLayerClickEvent", forLayer, e.lngLat.lat, e.lngLat.lng, description);
+        mapInterfaceRef.invokeMethodAsync("HandleLayerClickEvent", forLayer, e.lngLat.lat, e.lngLat.lng, description);
     });
 }
 
 export function addOnMapClickEventlistner(mapInterfaceRef) {
-    map.on(onEventId, () => {
+    window.map.on(onEventId, () => {
         var description = e.features[0].properties.description;
-        mapInterfaceRef.invokeMethodeAsync("HandleMapClickEvent", e.lngLat.lat, e.lngLat.lng, description);
+        mapInterfaceRef.invokeMethodAsync("HandleMapClickEvent", e.lngLat.lat, e.lngLat.lng, description);
     });
 }

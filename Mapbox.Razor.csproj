@@ -18,4 +18,10 @@
     <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Update="wwwroot\mapbox-interface.js">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
 </Project>
