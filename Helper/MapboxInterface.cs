@@ -38,9 +38,9 @@ namespace Mapbox.Razor.Helper
         [JSInvokableAttribute("HandleOnMapLoadAsync")]
         public async Task HandleOnMapLoadAsync()
         {
-            await AddSourcesAsync();
-            await AddLayersAsync();
-            await AddControlsAsync();
+            //await AddSourcesAsync();
+            //await AddLayersAsync();
+            //await AddControlsAsync();
         }
 
         private async Task AddControlsAsync()
