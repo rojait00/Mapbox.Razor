@@ -38,9 +38,9 @@ namespace Mapbox.Razor.Helper
         [JSInvokableAttribute("HandleOnMapLoadAsync")]
         public async Task HandleOnMapLoadAsync()
         {
-            //await AddSourcesAsync();
-            //await AddLayersAsync();
-            //await AddControlsAsync();
+            await AddSourcesAsync();
+            await AddLayersAsync();
+            await AddControlsAsync();
         }
 
         private async Task AddControlsAsync()
@@ -48,14 +48,7 @@ namespace Mapbox.Razor.Helper
             var module = await moduleTask.Value;
             foreach (var control in mapConfiguration.Controls)
             {
-                if (control is FullscreenControl)
-                {
-                    await module.InvokeAsync<string>("addFullscreenControl", control.Id, control.GetJson());
-                }
-                else
-                {
-                    await module.InvokeAsync<string>("addControl", control.Id, control.GetJson());
-                }
+                await module.InvokeAsync<string>("addControl", control.Id, control.GetJson());
             }
         }
 

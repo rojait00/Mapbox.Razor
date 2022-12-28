@@ -11,19 +11,37 @@
 }
 
 export function addSource(id, sourceJson) {
-    window.map.addSource(id, JSON.parse(sourceJson));
+    var mapSource = map.getSource(id);
+
+    if (typeof mapSource === 'undefined') {
+        window.map.addSource(id, JSON.parse(sourceJson));
+    }
 }
 
 export function removeSource(id) {
-    window.map.removeSource(id);
+    var mapSource = map.getSource(id);
+
+    if (typeof mapSource !== 'undefined') {
+        window.map.removeSource(id);
+    }
 }
 
 export function addLayer(layerJson) {
-    window.map.addLayer(JSON.parse(layerJson));
+    var layerObj = JSON.parse(layerJson);
+
+    var mapLayer = map.getLayer(layerObj.id);
+
+    if (typeof mapLayer === 'undefined') {
+        window.map.addLayer(layerObj);
+    }
 }
 
 export function removeLayer(id) {
-    window.map.removeSource(id);
+    var mapSource = map.getSource(id);
+
+    if (typeof mapSource !== 'undefined') {
+        window.map.removeSource(id);
+    }
 }
 
 export function addControl(type, controlJson) {
@@ -32,8 +50,8 @@ export function addControl(type, controlJson) {
 
     switch (type) {
         case 'fullscreen_control_id':
-            controlObj.container = $(controlObj.container);
             controlObj = new mapboxgl.FullscreenControl(controlConfig);
+            controlObj.container = $(controlConfig.container);
             break;
         case 'geo_locate_control_id':
             controlObj = new mapboxgl.GeolocateControl(controlConfig);
@@ -48,14 +66,16 @@ export function addControl(type, controlJson) {
             return;
     }
 
-
-    window.mapControls[id] = controlObj
+    window.mapControls = {};
+    window.mapControls[type] = controlObj;
     window.map.addControl(controlObj);
 }
 
 export function removeControl(id) {
     var controlObj = window.mapControls[id];
-    window.map.removeControl(controlObj);
+    if (typeof controlObj !== 'undefined') {
+        window.map.removeControl(controlObj);
+    }
 }
 
 export function addEventlistner(onEventId, forLayer, mapInterfaceRef) {
