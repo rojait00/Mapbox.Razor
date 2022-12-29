@@ -11,7 +11,7 @@ namespace Mapbox.Razor.Models
             public dynamic? LineColor { get; set; }
 
             [JsonProperty("line-width")]
-            public List<dynamic>? LineWidth { get; set; }
+            public dynamic? LineWidth { get; set; }
 
             [JsonProperty("fill-color")]
             public dynamic? FillColor { get; set; }

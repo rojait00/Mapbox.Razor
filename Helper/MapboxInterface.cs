@@ -38,9 +38,10 @@ namespace Mapbox.Razor.Helper
         [JSInvokableAttribute("HandleOnMapLoadAsync")]
         public async Task HandleOnMapLoadAsync()
         {
-            //await AddSourcesAsync();
-            //await AddLayersAsync();
-            //await AddControlsAsync();
+            await AddImagesAsync();
+            await AddSourcesAsync();
+            await AddLayersAsync();
+            await AddControlsAsync();
         }
 
         private async Task AddControlsAsync()
@@ -48,14 +49,16 @@ namespace Mapbox.Razor.Helper
             var module = await moduleTask.Value;
             foreach (var control in mapConfiguration.Controls)
             {
-                if (control is FullscreenControl)
-                {
-                    await module.InvokeAsync<string>("addFullscreenControl", control.Id, control.GetJson());
-                }
-                else
-                {
-                    await module.InvokeAsync<string>("addControl", control.Id, control.GetJson());
-                }
+                await module.InvokeAsync<string>("addControl", control.Id, control.GetJson());
+            }
+        }
+
+        private async Task AddImagesAsync()
+        {
+            var module = await moduleTask.Value;
+            foreach (var image in mapConfiguration.Images)
+            {
+                await module.InvokeAsync<string>("addImage", image.Id, image.Url);
             }
         }
 
@@ -75,6 +78,12 @@ namespace Mapbox.Razor.Helper
             {
                 await module.InvokeAsync<string>("addLayer", layer.GetJson());
             }
+        }
+        
+        internal async Task RemoveImageAsync(string id)
+        {
+            var module = await moduleTask.Value;
+            await module.InvokeAsync<string>("removeImage", id);
         }
 
         internal async Task RemoveSourceAsync(string id)
