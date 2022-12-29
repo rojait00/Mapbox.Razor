@@ -1,10 +1,5 @@
 ﻿using BAMCIS.GeoJSON;
 using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Mapbox.Razor.Models
 {
@@ -37,11 +32,26 @@ namespace Mapbox.Razor.Models
         public bool? Animate { get; set; }
 
         [JsonProperty("data")]
-        public object? Data { get; set; }
+        public dynamic? Data
+        {
+            get
+            {
+                if (DataUrl != null)
+                {
+                    return DataUrl;
+                }
+                else
+                {
+                    return DataJson;
+                }
+            }
+        }
 
-        public string? DataUrl { get; set; }
+        [JsonIgnore]
+        public string? DataUrl { get; set; } = null;
 
-        public GeoJson? DataJson { get; set; }
+        [JsonIgnore]
+        public GeoJson? DataJson { get; set; } = null;
 
         [JsonProperty("tiles")]
         public List<string>? Tiles { get; set; }

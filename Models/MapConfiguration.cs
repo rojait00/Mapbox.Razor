@@ -9,6 +9,9 @@ namespace Mapbox.Razor.Models
     public class MapConfiguration : IMapboxClass
     {
         [JsonIgnore]
+        public List<Image> Images { get; set; } = new();
+
+        [JsonIgnore]
         public List<Source> Sources { get; set; } = new List<Source>();
 
         [JsonIgnore]

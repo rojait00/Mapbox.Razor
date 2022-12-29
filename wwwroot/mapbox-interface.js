@@ -10,8 +10,25 @@
     });
 }
 
+export function addImage(id, url) {
+    window.map.loadImage(url, (error, image) => {
+        if (error) {
+            throw error;
+        }
+        if (!map.hasImage(id)) {
+            window.map.addImage(id, image);
+        }
+    });
+}
+
+export function removeImage(id) {
+    if (map.hasImage(id)) {
+        map.removeImage(id);
+    }
+}
+
 export function addSource(id, sourceJson) {
-    var mapSource = map.getSource(id);
+    var mapSource = window.map.getSource(id);
 
     if (typeof mapSource === 'undefined') {
         window.map.addSource(id, JSON.parse(sourceJson));
@@ -19,7 +36,7 @@ export function addSource(id, sourceJson) {
 }
 
 export function removeSource(id) {
-    var mapSource = map.getSource(id);
+    var mapSource = window.map.getSource(id);
 
     if (typeof mapSource !== 'undefined') {
         window.map.removeSource(id);
@@ -29,7 +46,7 @@ export function removeSource(id) {
 export function addLayer(layerJson) {
     var layerObj = JSON.parse(layerJson);
 
-    var mapLayer = map.getLayer(layerObj.id);
+    var mapLayer = window.map.getLayer(layerObj.id);
 
     if (typeof mapLayer === 'undefined') {
         window.map.addLayer(layerObj);
@@ -37,7 +54,7 @@ export function addLayer(layerJson) {
 }
 
 export function removeLayer(id) {
-    var mapSource = map.getSource(id);
+    var mapSource = window.map.getSource(id);
 
     if (typeof mapSource !== 'undefined') {
         window.map.removeSource(id);
