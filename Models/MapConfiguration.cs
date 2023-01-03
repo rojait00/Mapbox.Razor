@@ -1,5 +1,6 @@
 ﻿using BAMCIS.GeoJSON;
 using Mapbox.Razor.Models.Controls;
+using Mapbox.Razor.Models.Events;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -19,6 +20,15 @@ namespace Mapbox.Razor.Models
 
         [JsonIgnore]
         public List<IControl> Controls { get; set; } = new List<IControl>();
+
+        [JsonIgnore]
+        public List<LayerClickEvent> LayerClickHandler { get; set; } = new ();
+
+        [JsonIgnore]
+        public List<LayerEvent> LayerEventHandler { get; set; } = new ();
+
+        [JsonIgnore]
+        public List<MapClickEvent> MapClickHandler { get; set; } = new ();
 
         [JsonProperty("sprite")]
         public string? Sprite { get; set; }

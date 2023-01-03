@@ -102,15 +102,21 @@ export function addEventlistner(onEventId, forLayer, mapInterfaceRef) {
 }
 
 export function addOnLayerClickEventlistner(forLayer, mapInterfaceRef) {
-    window.map.on(onEventId, forLayer, () => {
-        var description = e.features[0].properties.description;
-        mapInterfaceRef.invokeMethodAsync("HandleLayerClickEvent", forLayer, e.lngLat.lat, e.lngLat.lng, description);
+    window.map.on('click', forLayer, (e) => {
+
+        const coordinates = e.features[0].geometry.coordinates.slice();
+        const properties = e.features[0].properties;
+
+        while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
+            coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
+        }
+
+        mapInterfaceRef.invokeMethodAsync("HandleLayerClickEvent", forLayer, e.lngLat.lat, e.lngLat.lng, properties);
     });
 }
 
 export function addOnMapClickEventlistner(mapInterfaceRef) {
-    window.map.on(onEventId, () => {
-        var description = e.features[0].properties.description;
-        mapInterfaceRef.invokeMethodAsync("HandleMapClickEvent", e.lngLat.lat, e.lngLat.lng, description);
+    window.map.on(onEventId, (e) => {
+        mapInterfaceRef.invokeMethodAsync("HandleMapClickEvent", e.lngLat.lat, e.lngLat.lng);
     });
 }

@@ -22,7 +22,7 @@ namespace Mapbox.Razor.Views
             {
                 MapConfiguration.Container = mapContainerId;
                 map = new MapboxInterface(jsRuntime, MapConfiguration);
-                await map.InitAsync();
+                await map.InitMapAsync();
             }
 
             await base.OnInitializedAsync();
