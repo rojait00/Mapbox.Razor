@@ -18,14 +18,24 @@ namespace Mapbox.Razor.Views
 
         protected override async Task OnInitializedAsync()
         {
+            await InitMapAsync();
+
+            await base.OnInitializedAsync();
+        }
+
+        /// <summary>
+        /// Is triggered automatically.
+        /// Can be called to reload config.
+        /// </summary>
+        /// <returns></returns>
+        public async Task InitMapAsync()
+        {
             if (MapConfiguration != null)
             {
                 MapConfiguration.Container = mapContainerId;
                 map = new MapboxInterface(jsRuntime, MapConfiguration);
                 await map.InitMapAsync();
             }
-
-            await base.OnInitializedAsync();
         }
     }
 }
