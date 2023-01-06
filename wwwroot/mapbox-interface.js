@@ -8,6 +8,12 @@
             mapInterfaceRef.invokeMethodAsync("HandleOnMapLoadAsync");
         }
     });
+
+    if (mapConfiguration.bounds?.length) {
+        window.map.fitBounds(mapConfiguration.bounds, {
+            padding: { top: 50, bottom: 50, left: 50, right: 50 }
+        });
+    }
 }
 
 export function addImage(id, url) {

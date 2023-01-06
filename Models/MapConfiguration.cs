@@ -100,6 +100,8 @@ namespace Mapbox.Razor.Models
 
         ///<summary>
         ///The initial bounds of the map. If bounds is specified, it overrides center and zoom constructor options.
+        ///
+        /// Edit: usually only two points. Component automatically callculates the outer points and adds 50px padding.
         ///</summary>
         [JsonProperty("bounds")]
         public List<Position>? Bounds { get; set; } = null;
