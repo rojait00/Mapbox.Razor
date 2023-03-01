@@ -1,17 +1,7 @@
 ﻿using BAMCIS.GeoJSON;
 using Mapbox.Razor.Models;
-using Mapbox.Razor.Models.Controls;
 using Mapbox.Razor.Models.Events;
-using Microsoft.Extensions.Logging;
 using Microsoft.JSInterop;
-using Microsoft.JSInterop.Implementation;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using static System.Collections.Specialized.BitVector32;
 
 namespace Mapbox.Razor.Helper
 {
