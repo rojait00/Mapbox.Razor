@@ -12,7 +12,11 @@ namespace Mapbox.Razor.Helper
     {
         internal static string GetJson(this IMapboxClass mapboxClass)
         {
-            return JsonConvert.SerializeObject(mapboxClass);
+            return JsonConvert.SerializeObject(mapboxClass,
+                                               new JsonSerializerSettings
+                                               {
+                                                   NullValueHandling = NullValueHandling.Ignore
+                                               });
         }
     }
 }
