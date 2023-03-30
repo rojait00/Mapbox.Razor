@@ -41,12 +41,12 @@ namespace Mapbox.Razor.Views
 
         private void UpdateMapBounds()
         {
-            if(MapConfiguration?.Bounds?.Count > 2)
+             if (MapConfiguration?.Bounds?.Count > 2)
             {
-                var minLat = MapConfiguration.Bounds.Min(x => x.Latitude); 
-                var maxLat = MapConfiguration.Bounds.Max(x => x.Latitude); 
+                var minLat = MapConfiguration.Bounds.Min(x => x.Latitude);
+                var maxLat = MapConfiguration.Bounds.Max(x => x.Latitude);
 
-                var minLong = MapConfiguration.Bounds.Min(x => x.Longitude); 
+                var minLong = MapConfiguration.Bounds.Min(x => x.Longitude);
                 var maxLong = MapConfiguration.Bounds.Max(x => x.Longitude);
 
                 MapConfiguration.Bounds = new List<Position>
@@ -54,6 +54,10 @@ namespace Mapbox.Razor.Views
                     new Position(maxLong, minLat),
                     new Position(minLong, maxLat),
                 };
+            }
+            else if (MapConfiguration?.Bounds?.Count == 0)
+            {
+                //MapConfiguration.Bounds = null;
             }
         }
     }

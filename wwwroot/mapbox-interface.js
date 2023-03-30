@@ -10,6 +10,7 @@
     });
 
     if (mapConfiguration.bounds?.length) {
+        // ToDo: if did not work tried empty list
         window.map.fitBounds(mapConfiguration.bounds, {
             padding: { top: 50, bottom: 50, left: 50, right: 50 }
         });
@@ -102,13 +103,14 @@ export function removeControl(id) {
 }
 
 export function addEventlistner(onEventId, forLayer, mapInterfaceRef) {
-    window.map.on(onEventId, forLayer, () => {
+    window.map.on(onEventId, forLayer, (e) => {
         mapInterfaceRef.invokeMethodAsync("HandleEvent", onEventId, forLayer);
     });
 }
 
 export function addOnLayerClickEventlistner(forLayer, mapInterfaceRef) {
     window.map.on('click', forLayer, (e) => {
+        e.clickOnLayer = true;
 
         const coordinates = e.features[0].geometry.coordinates.slice();
         const properties = e.features[0].properties;
@@ -122,7 +124,9 @@ export function addOnLayerClickEventlistner(forLayer, mapInterfaceRef) {
 }
 
 export function addOnMapClickEventlistner(mapInterfaceRef) {
-    window.map.on(onEventId, (e) => {
-        mapInterfaceRef.invokeMethodAsync("HandleMapClickEvent", e.lngLat.lat, e.lngLat.lng);
+    window.map.on('click', (e) => {
+        if (!e.clickOnLayer) {
+            mapInterfaceRef.invokeMethodAsync("HandleMapClickEvent", e.lngLat.lat, e.lngLat.lng);
+        }
     });
 }

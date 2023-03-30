@@ -22,13 +22,13 @@ namespace Mapbox.Razor.Models
         public List<IControl> Controls { get; set; } = new List<IControl>();
 
         [JsonIgnore]
-        public List<LayerClickEvent> LayerClickHandler { get; set; } = new ();
+        public List<LayerClickEvent> LayerClickHandler { get; set; } = new();
 
         [JsonIgnore]
-        public List<LayerEvent> LayerEventHandler { get; set; } = new ();
+        public List<LayerEvent> LayerEventHandler { get; set; } = new();
 
         [JsonIgnore]
-        public List<MapClickEvent> MapClickHandler { get; set; } = new ();
+        public MapClickEvent? MapClickHandler { get; set; } = null;
 
         [JsonProperty("sprite")]
         public string? Sprite { get; set; }

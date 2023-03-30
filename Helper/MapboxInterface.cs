@@ -27,6 +27,10 @@ namespace Mapbox.Razor.Helper
 
         public async Task InitMapAsync()
         {
+            if(mapConfiguration.Bounds?.Count == 0)
+            {
+                mapConfiguration.Bounds = null;
+            }
             var module = await moduleTask.Value;
             await module.InvokeAsync<string>("initMap", mapInterfaceRef, mapConfiguration.GetJson());
         }
@@ -86,9 +90,9 @@ namespace Mapbox.Razor.Helper
 
         private async Task AddOnMapClickEventlistnersAsync()
         {
-            foreach (var eventDetails in mapConfiguration.MapClickHandler)
+            if(mapConfiguration.MapClickHandler != null)
             {
-                await AddOnMapClickEventlistnerAsync(eventDetails.Action);
+                await AddOnMapClickEventlistnerAsync(mapConfiguration.MapClickHandler.Action);
             }
         }
 
@@ -165,6 +169,11 @@ namespace Mapbox.Razor.Helper
             await module.InvokeAsync<string>("addOnLayerClickEventlistner", forLayer, mapInterfaceRef);
         }
 
+        /// <summary>
+        /// ToDo: Add parameter for SuppressLayerClickEvents
+        /// </summary>
+        /// <param name="action"></param>
+        /// <returns></returns>
         public async Task AddOnMapClickEventlistnerAsync(Action<MapClickEventArgs>? action)
         {
             onMapClicked = action;

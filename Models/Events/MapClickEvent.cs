@@ -8,6 +8,8 @@ namespace Mapbox.Razor.Models.Events
 {
     public class MapClickEvent
     {
+        public bool SuppressLayerClickEvents { get; set; } = true;
+
         public Action<MapClickEventArgs>? Action { get; set; }
     }
 }
