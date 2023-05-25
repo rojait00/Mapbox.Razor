@@ -1,5 +1,6 @@
 ﻿using BAMCIS.GeoJSON;
 using Mapbox.Razor.Models.Controls;
+using Mapbox.Razor.Models.Events;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -19,6 +20,15 @@ namespace Mapbox.Razor.Models
 
         [JsonIgnore]
         public List<IControl> Controls { get; set; } = new List<IControl>();
+
+        [JsonIgnore]
+        public List<LayerClickEvent> LayerClickHandler { get; set; } = new();
+
+        [JsonIgnore]
+        public List<LayerEvent> LayerEventHandler { get; set; } = new();
+
+        [JsonIgnore]
+        public MapClickEvent? MapClickHandler { get; set; } = null;
 
         [JsonProperty("sprite")]
         public string? Sprite { get; set; }
@@ -90,6 +100,8 @@ namespace Mapbox.Razor.Models
 
         ///<summary>
         ///The initial bounds of the map. If bounds is specified, it overrides center and zoom constructor options.
+        ///
+        /// Edit: usually only two points. Component automatically callculates the outer points and adds 50px padding.
         ///</summary>
         [JsonProperty("bounds")]
         public List<Position>? Bounds { get; set; } = null;

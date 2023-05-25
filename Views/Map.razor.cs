@@ -18,14 +18,47 @@ namespace Mapbox.Razor.Views
 
         protected override async Task OnInitializedAsync()
         {
+            await InitMapAsync();
+
+            await base.OnInitializedAsync();
+        }
+
+        /// <summary>
+        /// Is triggered automatically.
+        /// Can be called to reload config.
+        /// </summary>
+        /// <returns></returns>
+        public async Task InitMapAsync()
+        {
             if (MapConfiguration != null)
             {
                 MapConfiguration.Container = mapContainerId;
                 map = new MapboxInterface(jsRuntime, MapConfiguration);
-                await map.InitAsync();
+                UpdateMapBounds();
+                await map.InitMapAsync();
             }
+        }
 
-            await base.OnInitializedAsync();
+        private void UpdateMapBounds()
+        {
+             if (MapConfiguration?.Bounds?.Count > 2)
+            {
+                var minLat = MapConfiguration.Bounds.Min(x => x.Latitude);
+                var maxLat = MapConfiguration.Bounds.Max(x => x.Latitude);
+
+                var minLong = MapConfiguration.Bounds.Min(x => x.Longitude);
+                var maxLong = MapConfiguration.Bounds.Max(x => x.Longitude);
+
+                MapConfiguration.Bounds = new List<Position>
+                {
+                    new Position(maxLong, minLat),
+                    new Position(minLong, maxLat),
+                };
+            }
+            else if (MapConfiguration?.Bounds?.Count == 0)
+            {
+                //MapConfiguration.Bounds = null;
+            }
         }
     }
 }
