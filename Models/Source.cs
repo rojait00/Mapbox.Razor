@@ -42,7 +42,7 @@ namespace Mapbox.Razor.Models
                 }
                 else
                 {
-                    return DataJson;
+                    return DataGeoJson;
                 }
             }
         }
@@ -51,7 +51,7 @@ namespace Mapbox.Razor.Models
         public string? DataUrl { get; set; } = null;
 
         [JsonIgnore]
-        public GeoJson? DataJson { get; set; } = null;
+        public GeoJson? DataGeoJson { get; set; } = null;
 
         [JsonProperty("tiles")]
         public List<string>? Tiles { get; set; }
@@ -70,5 +70,8 @@ namespace Mapbox.Razor.Models
 
         [JsonProperty("clusterRadius")]
         public double? ClusterRadius { get; set; }
+
+        [JsonIgnore]
+        public dynamic? AdditionalParameters { get; set; } = null;
     }
 }

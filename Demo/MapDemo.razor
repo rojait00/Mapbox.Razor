@@ -1,0 +1,239 @@
+﻿@using Mapbox.Razor
+@using Mapbox.Razor.Helper
+@using Mapbox.Razor.Models
+@using Mapbox.Razor.Models.Controls
+@using Mapbox.Razor.Models.Events
+@using Mapbox.Razor.Views
+@using BAMCIS.GeoJSON
+@using Newtonsoft.Json
+@using Mapbox.Razor.Extensions
+@using Newtonsoft.Json.Linq;
+
+@inject HttpClient Http
+
+<Map @ref=mapRef MapConfiguration="mapConfig" />
+
+@code {
+    [Parameter]
+    public List<Asset> SelectedAssets { get; set; } = new();
+
+    MapConfiguration? mapConfig;
+
+    Map? mapRef;
+
+    [Parameter]
+    public bool AllowAddNew { get; set; } = false;
+
+    IEnumerable<Source> GetSources()
+    {
+        return new List<Source>
+        {
+            new Source
+                {
+                    Type = "geojson",
+                    Id = "assets",
+                    DataGeoJson =  new FeatureCollection(SelectedAssets.Select(x => new Feature(new Point(x.Location))))
+                }
+        };
+    }
+
+    IEnumerable<Layer> GetLayers(List<Source> sources)
+    {
+        return sources.Select(x => new Layer
+            {
+                Type = "symbol",
+                Source = x.Id,
+                Id = x.Id + "-symbols",
+                Layout = new Layer.LayoutDetails
+                {
+                    IconImage = "factory",
+                    IconSize = 0.65
+                }
+            });
+    }
+
+    private static Layer GetWhiteCircleLayer(string sourceId)
+    {
+        Layer? circleLayer = JsonConvert.DeserializeObject<Layer>(@"
+                        {
+                            'type': 'circle',
+                            'paint': {
+                                'circle-color': '#FFFFFF',
+                                'circle-opacity': 0.9,
+                                'circle-radius': 18
+                            }
+                        }")!;
+        circleLayer.Id = sourceId + "-white-circles";
+        circleLayer.Source = sourceId;
+        return circleLayer;
+    }
+
+    public async Task RefreshAsync(bool firstReload = false)
+    {
+        await SetConfigAsync();
+        if (mapRef != null)
+        {
+            await mapRef.InitMapAsync();
+        }
+        if (!firstReload)
+        {
+            StateHasChanged();
+        }
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await base.OnParametersSetAsync();
+
+        await RefreshAsync(true);
+    }
+
+    private async Task SetConfigAsync()
+    {
+        mapConfig = GetConfig();
+
+        mapConfig.Controls = new List<IControl>()
+        {
+            new GeoLocateControl(),
+            new ScaleControl(),
+            new NavigationControl()
+        };
+        mapConfig.Images.AddRange(GetImages());
+        SetEditMode(AllowAddNew, true);
+
+        var newSources = new List<Source>();
+        var newLayers = new List<Layer>();
+
+        newSources.AddRange(GetSources());
+        newLayers.AddRange(GetLayers(newSources));
+
+        mapConfig.Bounds = newSources.Select(x => x.DataGeoJson)
+                                     .OfType<FeatureCollection>()
+                                     .SelectMany(x => x.GetAllCoordinates())
+                                     .ToList();
+
+        mapConfig.Sources.AddRange(newSources);
+        mapConfig.Layers.AddRange(newLayers);
+
+        mapConfig.LayerClickHandler = newLayers.Select(x => new LayerClickEvent { LayerId = x.Id, Action = DisplayAsync }).ToList();
+    }
+
+    public async void AddEntityAsync(MapClickEventArgs eventArgs)
+    {
+        //await dialogService.OpenAsync<AddAsset>("New Asset",
+        //                                          new Dictionary<string, object>
+        //                                              {
+        //                                                  { "Position", eventArgs.Position }
+        //                                              },
+        //                                           new DialogOptions()
+        //                                              {
+        //                                                  Width = "1100px",
+        //                                              }
+        //                                          );
+    }
+
+    public async void DisplayAsync(LayerClickEventArgs eventArgs)
+    {
+        var success = eventArgs.Properties.TryGetValue("id", out var val);
+
+        if (success != true)
+        {
+            return;
+        }
+
+        var str = System.Text.Json.JsonSerializer.Deserialize<string>
+            (val);
+
+        if (Guid.TryParse(str, out Guid guid))
+        {
+            var asset = SelectedAssets.FirstOrDefault(x => x.Id == guid);
+            //await dialogService.OpenAsync<AssetView>("Details asset?.Name",
+            //        new Dictionary<string, object?>
+            //          {
+            //                { "Item", asset },
+            //                { "ShowHeadline", false },
+            //                { "ShowMoreDetailsButton", true }
+            //          },
+            //        new DialogOptions
+            //            {
+            //                Width = "1100px",
+            //            });
+        }
+    }
+
+    readonly List<Source> sources = new() {
+        new Source { Url = "mapbox://mapbox.mapbox-bathymetry-v2", Type = "vector" },
+        new Source { Url = "mapbox://mapbox.mapbox-terrain-v2", Type = "vector" },
+        new Source { Url = "mapbox://mapbox.mapbox-streets-v8", Type = "vector" }
+    };
+    const string layers = "[{\"id\":\"land\",\"type\":\"background\",\"metadata\":{\"mapbox:featureComponent\":\"land-and-water\",\"mapbox:group\":\"Land & water, land\"},\"layout\":{},\"paint\":{\"background-color\":[\"interpolate\",[\"linear\"],[\"zoom\"],9,\"hsl(20, 20%, 95%)\",11,\"hsl(20, 18%, 91%)\"]}},{\"id\":\"landcover\",\"type\":\"fill\",\"metadata\":{\"mapbox:featureComponent\":\"land-and-water\",\"mapbox:group\":\"Land & water, land\"},\"source\":\"composite\",\"source-layer\":\"landcover\",\"maxzoom\":12,\"layout\":{},\"paint\":{\"fill-color\":[\"match\",[\"get\",\"class\"],\"wood\",\"hsla(115, 55%, 74%, 0.8)\",\"scrub\",\"hsla(110, 52%, 82%, 0.6)\",\"crop\",\"hsla(80, 60%, 84%, 0.6)\",\"grass\",\"hsla(110, 55%, 88%, 0.6)\",\"snow\",\"hsl(200, 70%, 90%)\",\"hsl(110, 52%, 81%)\"],\"fill-opacity\":[\"interpolate\",[\"exponential\",1.5],[\"zoom\"],8,0.8,12,0],\"fill-antialias\":false}},{\"id\":\"national-park\",\"type\":\"fill\",\"metadata\":{\"mapbox:featureComponent\":\"land-and-water\",\"mapbox:group\":\"Land & water, land\"},\"source\":\"composite\",\"source-layer\":\"landuse_overlay\",\"minzoom\":5,\"filter\":[\"==\",[\"get\",\"class\"],\"national_park\"],\"layout\":{},\"paint\":{\"fill-color\":\"hsl(110, 41%, 78%)\",\"fill-opacity\":[\"interpolate\",[\"linear\"],[\"zoom\"],5,0,6,0.6,12,0.2]}},{\"id\":\"national-park_tint-band\",\"type\":\"line\",\"metadata\":{\"mapbox:featureComponent\":\"land-and-water\",\"mapbox:group\":\"Land & water, land\"},\"source\":\"composite\",\"source-layer\":\"landuse_overlay\",\"minzoom\":9,\"filter\":[\"==\",[\"get\",\"class\"],\"national_park\"],\"layout\":{},\"paint\":{\"line-color\":\"hsl(110, 41%, 78%)\",\"line-width\":[\"interpolate\",[\"exponential\",1.5],[\"zoom\"],9,1,14,8],\"line-blur\":[\"interpolate\",[\"exponential\",1.5],[\"zoom\"],9,1,14,8]}},{\"id\":\"landuse\",\"type\":\"fill\",\"metadata\":{\"mapbox:featureComponent\":\"land-and-water\",\"mapbox:group\":\"Land & water, land\"},\"source\":\"composite\",\"source-layer\":\"landuse\",\"minzoom\":5,\"filter\":[\"all\",[\">=\",[\"to-number\",[\"get\",\"sizerank\"]],0],[\"match\",[\"get\",\"class\"],[\"agriculture\",\"wood\",\"grass\",\"scrub\",\"park\",\"airport\",\"glacier\",\"pitch\",\"sand\"],true,\"residential\",[\"step\",[\"zoom\"],true,12,false],[\"facility\",\"industrial\"],[\"step\",[\"zoom\"],false,12,true],\"rock\",true,\"cemetery\",true,\"school\",true,\"hospital\",true,\"commercial_area\",true,false],[\"<=\",[\"-\",[\"to-number\",[\"get\",\"sizerank\"]],[\"interpolate\",[\"exponential\",1.5],[\"zoom\"],12,0,18,14]],14]],\"layout\":{},\"paint\":{\"fill-color\":[\"interpolate\",[\"linear\"],[\"zoom\"],15,[\"match\",[\"get\",\"class\"],\"wood\",\"hsla(115, 55%, 74%, 0.8)\",\"scrub\",\"hsla(110, 52%, 82%, 0.6)\",\"agriculture\",\"hsla(110, 55%, 88%, 0.6)\",\"park\",[\"match\",[\"get\",\"type\"],[\"garden\",\"playground\",\"zoo\"],\"hsl(110, 41%, 78%)\",\"hsl(110, 60%, 80%)\"],\"grass\",\"hsla(110, 55%, 88%, 0.6)\",\"airport\",\"hsl(225, 60%, 92%)\",\"cemetery\",\"hsl(110, 48%, 85%)\",\"glacier\",\"hsl(200, 70%, 90%)\",\"hospital\",\"hsl(0, 50%, 92%)\",\"pitch\",\"hsl(100, 70%, 85%)\",\"sand\",\"hsl(52, 65%, 86%)\",\"rock\",\"hsl(20, 0%, 100%)\",\"school\",\"hsl(40, 50%, 88%)\",\"commercial_area\",\"hsl(45, 55%, 93%)\",\"residential\",\"hsl(20, 7%, 97%)\",[\"facility\",\"industrial\"],\"hsl(230, 20%, 90%)\",\"hsl(20, 22%, 86%)\"],16,[\"match\",[\"get\",\"class\"],\"wood\",\"hsla(115, 55%, 74%, 0.8)\",\"scrub\",\"hsla(110, 52%, 82%, 0.6)\",\"agriculture\",\"hsla(110, 55%, 88%, 0.6)\",\"park\",[\"match\",[\"get\",\"type\"],[\"garden\",\"playground\",\"zoo\"],\"hsl(110, 41%, 78%)\",\"hsl(110, 60%, 80%)\"],\"grass\",\"hsla(110, 55%, 88%, 0.6)\",\"airport\",\"hsl(225, 60%, 92%)\",\"cemetery\",\"hsl(110, 48%, 85%)\",\"glacier\",\"hsl(200, 70%, 90%)\",\"hospital\",\"hsl(0, 50%, 92%)\",\"pitch\",\"hsl(100, 70%, 85%)\",\"sand\",\"hsl(52, 65%, 86%)\",\"rock\",\"hsla(20, 0%, 100%, 0.5)\",\"school\",\"hsl(40, 50%, 88%)\",\"commercial_area\",\"hsla(45, 55%, 93%, 0.5)\",[\"facility\",\"industrial\"],\"hsl(230, 20%, 90%)\",\"hsl(20, 22%, 86%)\"]],\"fill-opacity\":[\"interpolate\",[\"linear\"],[\"zoom\"],8,[\"match\",[\"get\",\"class\"],[\"residential\",\"airport\"],0.8,0.2],12,[\"match\",[\"get\",\"class\"],\"residential\",0,1]]}},{\"id\":\"pitch-outline\",\"type\":\"line\",\"metadata\":{\"mapbox:featureComponent\":\"land-and-water\",\"mapbox:group\":\"Land & water, land\"},\"source\":\"composite\",\"source-layer\":\"landuse\",\"minzoom\":15,\"filter\":[\"==\",[\"get\",\"class\"],\"pitch\"],\"layout\":{},\"paint\":{\"line-color\":\"hsl(100, 65%, 75%)\"}},{\"id\":\"waterway-shadow\",\"type\":\"line\",\"metadata\":{\"mapbox:featureComponent\":\"land-and-water\",\"mapbox:group\":\"Land & water, water\"},\"source\":\"composite\",\"source-layer\":\"waterway\",\"minzoom\":8,\"layout\":{\"line-cap\":[\"step\",[\"zoom\"],\"butt\",11,\"round\"],\"line-join\":\"round\"},\"paint\":{\"line-color\":\"hsl(219, 100%, 79%)\",\"line-width\":[\"interpolate\",[\"exponential\",1.3],[\"zoom\"],9,[\"match\",[\"get\",\"class\"],[\"canal\",\"river\"],0.1,0],20,[\"match\",[\"get\",\"class\"],[\"canal\",\"river\"],8,3]],\"line-translate\":[\"interpolate\",[\"exponential\",1.2],[\"zoom\"],7,[\"literal\",[0,0]],16,[\"literal\",[-1,-1]]],\"line-translate-anchor\":\"viewport\",\"line-opacity\":[\"interpolate\",[\"linear\"],[\"zoom\"],8,0,8.5,1]}},{\"id\":\"water-shadow\",\"type\":\"fill\",\"metadata\":{\"mapbox:featureComponent\":\"land-and-water\",\"mapbox:group\":\"Land & water, water\"},\"source\":\"composite\",\"source-layer\":\"water\",\"minzoom\":7,\"layout\":{},\"paint\":{\"fill-color\":\"hsl(219, 100%, 79%)\",\"fill-translate\":[\"interpolate\",[\"exponential\",1.2],[\"zoom\"],7,[\"literal\",[0,0]],16,[\"literal\",[-1,-1]]],\"fill-translate-anchor\":\"viewport\"}},{\"id\":\"waterway\",\"type\":\"line\",\"metadata\":{\"mapbox:featureComponent\":\"land-and-water\",\"mapbox:group\":\"Land & water, water\"},\"source\":\"composite\",\"source-layer\":\"waterway\",\"minzoom\":8,\"layout\":{\"line-cap\":[\"step\",[\"zoom\"],\"butt\",11,\"round\"],\"line-join\":\"round\"},\"paint\":{\"line-color\":\"hsl(200, 100%, 80%)\",\"line-width\":[\"interpolate\",[\"exponential\",1.3],[\"zoom\"],9,[\"match\",[\"get\",\"class\"],[\"canal\",\"river\"],0.1,0],20,[\"match\",[\"get\",\"class\"],[\"canal\",\"river\"],8,3]],\"line-opacity\":[\"interpolate\",[\"linear\"],[\"zoom\"],8,0,8.5,1]}},{\"id\":\"water\",\"type\":\"fill\",\"metadata\":{\"mapbox:featureComponent\":\"land-and-water\",\"mapbox:group\":\"Land & water, water\"},\"source\":\"composite\",\"source-layer\":\"water\",\"layout\":{},\"paint\":{\"fill-color\":\"hsl(200, 100%, 80%)\"}},{\"id\":\"water-depth\",\"type\":\"fill\",\"metadata\":{\"mapbox:featureComponent\":\"land-and-water\",\"mapbox:group\":\"Land & water, water\"},\"source\":\"composite\",\"source-layer\":\"depth\",\"maxzoom\":8,\"layout\":{},\"paint\":{\"fill-color\":[\"interpolate\",[\"linear\"],[\"zoom\"],6,[\"interpolate\",[\"linear\"],[\"get\",\"min_depth\"],0,\"hsla(200, 100%, 80%, 0.35)\",200,\"hsla(200, 100%, 72%, 0.35)\",7000,\"hsla(200, 100%, 64%, 0.35)\"],8,[\"interpolate\",[\"linear\"],[\"get\",\"min_depth\"],0,\"hsla(200, 100%, 80%, 0)\",200,\"hsla(200, 100%, 72%, 0)\",7000,\"hsla(200, 100%, 60%, 0)\"]]}},{\"id\":\"wetland\",\"type\":\"fill\",\"metadata\":{\"mapbox:featureComponent\":\"land-and-water\",\"mapbox:group\":\"Land & water, water\"},\"source\":\"composite\",\"source-layer\":\"landuse_overlay\",\"minzoom\":5,\"filter\":[\"match\",[\"get\",\"class\"],[\"wetland\",\"wetland_noveg\"],true,false],\"paint\":{\"fill-color\":\"hsl(189, 63%, 84%)\",\"fill-opacity\":[\"interpolate\",[\"linear\"],[\"zoom\"],10,0.25,10.5,0.15]}},{\"id\":\"wetland-pattern\",\"type\":\"fill\",\"metadata\":{\"mapbox:featureComponent\":\"land-and-water\",\"mapbox:group\":\"Land & water, water\"},\"source\":\"composite\",\"source-layer\":\"landuse_overlay\",\"minzoom\":5,\"filter\":[\"match\",[\"get\",\"class\"],[\"wetland\",\"wetland_noveg\"],true,false],\"paint\":{\"fill-color\":\"hsl(189, 63%, 84%)\",\"fill-opacity\":[\"interpolate\",[\"linear\"],[\"zoom\"],10,0,10.5,1],\"fill-pattern\":\"wetland\",\"fill-translate-anchor\":\"viewport\"}},{\"id\":\"land-structure-polygon\",\"type\":\"fill\",\"metadata\":{\"mapbox:featureComponent\":\"land-and-water\",\"mapbox:group\":\"Land & water, built\"},\"source\":\"composite\",\"source-layer\":\"structure\",\"minzoom\":13,\"filter\":[\"all\",[\"==\",[\"get\",\"class\"],\"land\"],[\"==\",[\"geometry-type\"],\"Polygon\"]],\"layout\":{},\"paint\":{\"fill-color\":\"hsl(20, 20%, 95%)\"}},{\"id\":\"land-structure-line\",\"type\":\"line\",\"metadata\":{\"mapbox:featureComponent\":\"land-and-water\",\"mapbox:group\":\"Land & water, built\"},\"source\":\"composite\",\"source-layer\":\"structure\",\"minzoom\":13,\"filter\":[\"all\",[\"==\",[\"get\",\"class\"],\"land\"],[\"==\",[\"geometry-type\"],\"LineString\"]],\"layout\":{\"line-cap\":\"square\"},\"paint\":{\"line-width\":[\"interpolate\",[\"exponential\",1.99],[\"zoom\"],14,0.75,20,40],\"line-color\":\"hsl(20, 20%, 95%)\"}},{\"id\":\"admin-1-boundary-bg\",\"type\":\"line\",\"metadata\":{\"mapbox:featureComponent\":\"admin-boundaries\",\"mapbox:group\":\"Administrative boundaries, admin\"},\"source\":\"composite\",\"source-layer\":\"admin\",\"minzoom\":7,\"filter\":[\"all\",[\"==\",[\"get\",\"admin_level\"],1],[\"==\",[\"get\",\"maritime\"],\"false\"],[\"match\",[\"get\",\"worldview\"],[\"all\",\"US\"],true,false]],\"paint\":{\"line-color\":\"hsl(240, 100%, 100%)\",\"line-width\":[\"interpolate\",[\"linear\"],[\"zoom\"],3,3,12,6],\"line-opacity\":[\"interpolate\",[\"linear\"],[\"zoom\"],7,0,8,0.5],\"line-dasharray\":[1,0],\"line-blur\":[\"interpolate\",[\"linear\"],[\"zoom\"],3,0,12,3]}},{\"id\":\"admin-0-boundary-bg\",\"type\":\"line\",\"metadata\":{\"mapbox:featureComponent\":\"admin-boundaries\",\"mapbox:group\":\"Administrative boundaries, admin\"},\"source\":\"composite\",\"source-layer\":\"admin\",\"minzoom\":1,\"filter\":[\"all\",[\"==\",[\"get\",\"admin_level\"],0],[\"==\",[\"get\",\"maritime\"],\"false\"],[\"match\",[\"get\",\"worldview\"],[\"all\",\"US\"],true,false]],\"paint\":{\"line-width\":[\"interpolate\",[\"linear\"],[\"zoom\"],3,4,12,8],\"line-color\":\"hsl(240, 100%, 100%)\",\"line-opacity\":[\"interpolate\",[\"linear\"],[\"zoom\"],3,0,4,0.5],\"line-blur\":[\"interpolate\",[\"linear\"],[\"zoom\"],3,0,12,2]}},{\"id\":\"admin-1-boundary\",\"type\":\"line\",\"metadata\":{\"mapbox:featureComponent\":\"admin-boundaries\",\"mapbox:group\":\"Administrative boundaries, admin\"},\"source\":\"composite\",\"source-layer\":\"admin\",\"minzoom\":2,\"filter\":[\"all\",[\"==\",[\"get\",\"admin_level\"],1],[\"==\",[\"get\",\"maritime\"],\"false\"],[\"match\",[\"get\",\"worldview\"],[\"all\",\"US\"],true,false]],\"layout\":{},\"paint\":{\"line-dasharray\":[\"step\",[\"zoom\"],[\"literal\",[2,0]],7,[\"literal\",[2,2,6,2]]],\"line-width\":[\"interpolate\",[\"linear\"],[\"zoom\"],3,0.3,12,1.5],\"line-opacity\":[\"interpolate\",[\"linear\"],[\"zoom\"],2,0,3,1],\"line-color\":\"hsl(240, 50%, 65%)\"}},{\"id\":\"admin-0-boundary\",\"type\":\"line\",\"metadata\":{\"mapbox:featureComponent\":\"admin-boundaries\",\"mapbox:group\":\"Administrative boundaries, admin\"},\"source\":\"composite\",\"source-layer\":\"admin\",\"minzoom\":1,\"filter\":[\"all\",[\"==\",[\"get\",\"admin_level\"],0],[\"==\",[\"get\",\"disputed\"],\"false\"],[\"==\",[\"get\",\"maritime\"],\"false\"],[\"match\",[\"get\",\"worldview\"],[\"all\",\"US\"],true,false]],\"layout\":{},\"paint\":{\"line-color\":\"hsl(240, 50%, 60%)\",\"line-width\":[\"interpolate\",[\"linear\"],[\"zoom\"],3,0.5,12,2],\"line-dasharray\":[10,0]}},{\"id\":\"admin-0-boundary-disputed\",\"type\":\"line\",\"metadata\":{\"mapbox:featureComponent\":\"admin-boundaries\",\"mapbox:group\":\"Administrative boundaries, admin\"},\"source\":\"composite\",\"source-layer\":\"admin\",\"minzoom\":1,\"filter\":[\"all\",[\"==\",[\"get\",\"disputed\"],\"true\"],[\"==\",[\"get\",\"admin_level\"],0],[\"==\",[\"get\",\"maritime\"],\"false\"],[\"match\",[\"get\",\"worldview\"],[\"all\",\"US\"],true,false]],\"paint\":{\"line-color\":\"hsl(240, 50%, 60%)\",\"line-width\":[\"interpolate\",[\"linear\"],[\"zoom\"],3,0.5,12,2],\"line-dasharray\":[\"step\",[\"zoom\"],[\"literal\",[3,2,5]],7,[\"literal\",[2,1.5]]]}},{\"id\":\"settlement-subdivision-label\",\"type\":\"symbol\",\"metadata\":{\"mapbox:featureComponent\":\"place-labels\",\"mapbox:group\":\"Place labels, place-labels\"},\"source\":\"composite\",\"source-layer\":\"place_label\",\"minzoom\":10,\"maxzoom\":15,\"filter\":[\"all\",[\"match\",[\"get\",\"class\"],[\"settlement_subdivision\",\"disputed_settlement_subdivision\"],[\"match\",[\"get\",\"worldview\"],[\"all\",\"US\"],true,false],false],[\"<=\",[\"get\",\"filterrank\"],4]],\"layout\":{\"text-field\":[\"coalesce\",[\"get\",\"name_de\"],[\"get\",\"name\"]],\"text-transform\":\"uppercase\",\"text-font\":[\"DIN Pro Regular\",\"Arial Unicode MS Regular\"],\"text-letter-spacing\":[\"match\",[\"get\",\"type\"],\"suburb\",0.15,0.05],\"text-max-width\":7,\"text-padding\":3,\"text-size\":[\"interpolate\",[\"cubic-bezier\",0.5,0,1,1],[\"zoom\"],11,[\"match\",[\"get\",\"type\"],\"suburb\",11,10.5],15,[\"match\",[\"get\",\"type\"],\"suburb\",15,14]]},\"paint\":{\"text-halo-color\":\"hsla(20, 25%, 100%, 0.75)\",\"text-halo-width\":1,\"text-color\":\"hsl(220, 30%, 40%)\",\"text-halo-blur\":0.5}},{\"id\":\"settlement-minor-label\",\"type\":\"symbol\",\"metadata\":{\"mapbox:featureComponent\":\"place-labels\",\"mapbox:group\":\"Place labels, place-labels\"},\"source\":\"composite\",\"source-layer\":\"place_label\",\"minzoom\":2,\"maxzoom\":13,\"filter\":[\"all\",[\"<=\",[\"get\",\"filterrank\"],3],[\"match\",[\"get\",\"class\"],[\"settlement\",\"disputed_settlement\"],[\"match\",[\"get\",\"worldview\"],[\"all\",\"US\"],true,false],false],[\"step\",[\"zoom\"],[\">\",[\"get\",\"symbolrank\"],6],4,[\">=\",[\"get\",\"symbolrank\"],7],6,[\">=\",[\"get\",\"symbolrank\"],8],7,[\">=\",[\"get\",\"symbolrank\"],10],10,[\">=\",[\"get\",\"symbolrank\"],11],11,[\">=\",[\"get\",\"symbolrank\"],13],12,[\">=\",[\"get\",\"symbolrank\"],15]]],\"layout\":{\"text-line-height\":1.1,\"text-size\":[\"interpolate\",[\"cubic-bezier\",0.2,0,0.9,1],[\"zoom\"],3,[\"step\",[\"get\",\"symbolrank\"],11,9,10],6,[\"step\",[\"get\",\"symbolrank\"],14,9,12,12,10],8,[\"step\",[\"get\",\"symbolrank\"],16,9,14,12,12,15,10],13,[\"step\",[\"get\",\"symbolrank\"],22,9,20,12,16,15,14]],\"text-radial-offset\":[\"step\",[\"zoom\"],[\"match\",[\"get\",\"capital\"],2,0.6,0.55],8,0],\"symbol-sort-key\":[\"get\",\"symbolrank\"],\"icon-image\":[\"step\",[\"zoom\"],[\"case\",[\"==\",[\"get\",\"capital\"],2],\"border-dot-13\",[\"step\",[\"get\",\"symbolrank\"],\"dot-11\",9,\"dot-10\",11,\"dot-9\"]],8,\"\"],\"text-font\":[\"DIN Pro Regular\",\"Arial Unicode MS Regular\"],\"text-justify\":\"auto\",\"text-anchor\":[\"step\",[\"zoom\"],[\"get\",\"text_anchor\"],8,\"center\"],\"text-field\":[\"coalesce\",[\"get\",\"name_de\"],[\"get\",\"name\"]],\"text-max-width\":7},\"paint\":{\"text-color\":\"hsl(220, 30%, 0%)\",\"text-halo-color\":\"hsl(20, 25%, 100%)\",\"text-halo-width\":1,\"text-halo-blur\":1}},{\"id\":\"settlement-major-label\",\"type\":\"symbol\",\"metadata\":{\"mapbox:featureComponent\":\"place-labels\",\"mapbox:group\":\"Place labels, place-labels\"},\"source\":\"composite\",\"source-layer\":\"place_label\",\"minzoom\":2,\"maxzoom\":15,\"filter\":[\"all\",[\"<=\",[\"get\",\"filterrank\"],3],[\"match\",[\"get\",\"class\"],[\"settlement\",\"disputed_settlement\"],[\"match\",[\"get\",\"worldview\"],[\"all\",\"US\"],true,false],false],[\"step\",[\"zoom\"],false,2,[\"<=\",[\"get\",\"symbolrank\"],6],4,[\"<\",[\"get\",\"symbolrank\"],7],6,[\"<\",[\"get\",\"symbolrank\"],8],7,[\"<\",[\"get\",\"symbolrank\"],10],10,[\"<\",[\"get\",\"symbolrank\"],11],11,[\"<\",[\"get\",\"symbolrank\"],13],12,[\"<\",[\"get\",\"symbolrank\"],15],13,[\">=\",[\"get\",\"symbolrank\"],11],14,[\">=\",[\"get\",\"symbolrank\"],15]]],\"layout\":{\"text-line-height\":1.1,\"text-size\":[\"interpolate\",[\"cubic-bezier\",0.2,0,0.9,1],[\"zoom\"],3,[\"step\",[\"get\",\"symbolrank\"],13,6,11],6,[\"step\",[\"get\",\"symbolrank\"],18,6,16,7,14],8,[\"step\",[\"get\",\"symbolrank\"],20,9,16,10,14],15,[\"step\",[\"get\",\"symbolrank\"],24,9,20,12,16,15,14]],\"text-radial-offset\":[\"step\",[\"zoom\"],[\"match\",[\"get\",\"capital\"],2,0.6,0.55],8,0],\"symbol-sort-key\":[\"get\",\"symbolrank\"],\"icon-image\":[\"step\",[\"zoom\"],[\"case\",[\"==\",[\"get\",\"capital\"],2],\"border-dot-13\",[\"step\",[\"get\",\"symbolrank\"],\"dot-11\",9,\"dot-10\",11,\"dot-9\"]],8,\"\"],\"text-font\":[\"DIN Pro Medium\",\"Arial Unicode MS Regular\"],\"text-justify\":[\"step\",[\"zoom\"],[\"match\",[\"get\",\"text_anchor\"],[\"left\",\"bottom-left\",\"top-left\"],\"left\",[\"right\",\"bottom-right\",\"top-right\"],\"right\",\"center\"],8,\"center\"],\"text-anchor\":[\"step\",[\"zoom\"],[\"get\",\"text_anchor\"],8,\"center\"],\"text-field\":[\"coalesce\",[\"get\",\"name_de\"],[\"get\",\"name\"]],\"text-max-width\":7},\"paint\":{\"text-color\":\"hsl(220, 30%, 0%)\",\"text-halo-color\":\"hsl(20, 25%, 100%)\",\"text-halo-width\":1,\"text-halo-blur\":1}},{\"id\":\"state-label\",\"type\":\"symbol\",\"metadata\":{\"mapbox:featureComponent\":\"place-labels\",\"mapbox:group\":\"Place labels, place-labels\"},\"source\":\"composite\",\"source-layer\":\"place_label\",\"minzoom\":3,\"maxzoom\":9,\"filter\":[\"match\",[\"get\",\"class\"],[\"state\",\"disputed_state\"],[\"match\",[\"get\",\"worldview\"],[\"all\",\"US\"],true,false],false],\"layout\":{\"text-size\":[\"interpolate\",[\"cubic-bezier\",0.85,0.7,0.65,1],[\"zoom\"],4,[\"step\",[\"get\",\"symbolrank\"],9,6,8,7,7],9,[\"step\",[\"get\",\"symbolrank\"],21,6,16,7,14]],\"text-transform\":\"uppercase\",\"text-font\":[\"DIN Pro Bold\",\"Arial Unicode MS Bold\"],\"text-field\":[\"coalesce\",[\"get\",\"name_de\"],[\"get\",\"name\"]],\"text-letter-spacing\":0.15,\"text-max-width\":6},\"paint\":{\"text-color\":\"hsl(220, 30%, 0%)\",\"text-halo-color\":\"hsl(20, 25%, 100%)\",\"text-halo-width\":1,\"text-opacity\":0.5}},{\"id\":\"country-label\",\"type\":\"symbol\",\"metadata\":{\"mapbox:featureComponent\":\"place-labels\",\"mapbox:group\":\"Place labels, place-labels\"},\"source\":\"composite\",\"source-layer\":\"place_label\",\"minzoom\":1,\"maxzoom\":10,\"filter\":[\"match\",[\"get\",\"class\"],[\"country\",\"disputed_country\"],[\"match\",[\"get\",\"worldview\"],[\"all\",\"US\"],true,false],false],\"layout\":{\"icon-image\":\"\",\"text-field\":[\"coalesce\",[\"get\",\"name_de\"],[\"get\",\"name\"]],\"text-line-height\":1.1,\"text-max-width\":6,\"text-font\":[\"DIN Pro Medium\",\"Arial Unicode MS Regular\"],\"text-radial-offset\":[\"step\",[\"zoom\"],0.6,8,0],\"text-justify\":[\"step\",[\"zoom\"],[\"match\",[\"get\",\"text_anchor\"],[\"left\",\"bottom-left\",\"top-left\"],\"left\",[\"right\",\"bottom-right\",\"top-right\"],\"right\",\"center\"],7,\"auto\"],\"text-size\":[\"interpolate\",[\"cubic-bezier\",0.2,0,0.7,1],[\"zoom\"],1,[\"step\",[\"get\",\"symbolrank\"],11,4,9,5,8],9,[\"step\",[\"get\",\"symbolrank\"],22,4,19,5,17]]},\"paint\":{\"icon-opacity\":[\"step\",[\"zoom\"],[\"case\",[\"has\",\"text_anchor\"],1,0],7,0],\"text-color\":\"hsl(220, 30%, 0%)\",\"text-halo-color\":[\"interpolate\",[\"linear\"],[\"zoom\"],2,\"hsla(20, 25%, 100%, 0.75)\",3,\"hsl(20, 25%, 100%)\"],\"text-halo-width\":1.25}},{\"id\":\"continent-label\",\"type\":\"symbol\",\"metadata\":{\"mapbox:featureComponent\":\"place-labels\",\"mapbox:group\":\"Place labels, place-labels\"},\"source\":\"composite\",\"source-layer\":\"natural_label\",\"minzoom\":0.75,\"maxzoom\":3,\"filter\":[\"==\",[\"get\",\"class\"],\"continent\"],\"layout\":{\"text-field\":[\"coalesce\",[\"get\",\"name_de\"],[\"get\",\"name\"]],\"text-line-height\":1.1,\"text-max-width\":6,\"text-font\":[\"DIN Pro Medium\",\"Arial Unicode MS Regular\"],\"text-size\":[\"interpolate\",[\"exponential\",0.5],[\"zoom\"],0,10,2.5,15],\"text-transform\":\"uppercase\",\"text-letter-spacing\":0.05},\"paint\":{\"text-color\":\"hsl(220, 30%, 0%)\",\"text-halo-color\":[\"interpolate\",[\"linear\"],[\"zoom\"],0,\"hsla(20, 25%, 100%, 0.75)\",3,\"hsl(20, 25%, 100%)\"],\"text-halo-width\":1.5,\"text-opacity\":[\"interpolate\",[\"linear\"],[\"zoom\"],0,0.8,1.5,0.5,2.5,0]}}]";
+    const string metaData = "{\"mapbox:type\":\"default\",\"mapbox:origin\":\"streets-v12\",\"mapbox:sdk-support\":{\"android\":\"10.6.0\",\"ios\":\"10.6.0\",\"js\":\"2.9.0\"},\"mapbox:autocomposite\":true,\"mapbox:groups\":{\"Land & water, land\":{\"name\":\"Land & water, land\",\"collapsed\":true},\"Land & water, water\":{\"name\":\"Land & water, water\",\"collapsed\":true},\"Land & water, built\":{\"name\":\"Land & water, built\",\"collapsed\":true},\"Administrative boundaries, admin\":{\"name\":\"Administrative boundaries, admin\",\"collapsed\":true},\"Place labels, place-labels\":{\"name\":\"Place labels, place-labels\",\"collapsed\":true}},\"mapbox:trackposition\":false,\"mapbox:uiParadigm\":\"layers\",\"mapbox:decompiler\":{\"id\":\"clazzcah400bt15o2z0x0t7eo\",\"componentVersion\":\"15.0.0\",\"strata\":[{\"id\":\"streets-v12\",\"order\":[[\"land-and-water\",\"land\"],[\"land-and-water\",\"water\"],[\"land-and-water\",\"built\"],[\"admin-boundaries\",\"admin\"],[\"place-labels\",\"place-labels\"]]}],\"components\":{\"place-labels\":\"15.0.0\",\"admin-boundaries\":\"15.0.0\",\"land-and-water\":\"15.0.0\"},\"propConfig\":{\"place-labels\":{\"colorBase\":\"hsl(20, 20%, 95%)\",\"colorPlaceLabel\":\"hsl(220, 30%, 30%)\",\"language\":\"German\"},\"admin-boundaries\":{\"colorBase\":\"hsl(20, 20%, 95%)\",\"colorPlaceLabel\":\"hsl(220, 30%, 30%)\",\"colorAdminBoundary\":\"hsl(240, 50%, 60%)\"},\"land-and-water\":{\"colorEducation\":\"hsl(40, 50%, 88%)\",\"landStyle\":\"Outdoors\",\"colorGreenspace\":\"hsl(110, 60%, 80%)\",\"colorAirport\":\"hsl(225, 60%, 58%)\",\"colorIndustrialArea\":\"hsl(230, 20%, 90%)\",\"land\":\"Detailed\",\"colorMedical\":\"hsl(0, 50%, 92%)\",\"transitionLandOnZoom\":true,\"colorBase\":\"hsl(20, 20%, 95%)\",\"colorWater\":\"hsl(200, 100%, 80%)\",\"colorCommercialArea\":\"hsl(45, 55%, 93%)\",\"bathymetry\":true}}}}";
+
+    private MapConfiguration GetConfig()
+    {
+        return new MapConfiguration()
+            {
+                AccessToken = "Get your Access Token on Mapbox.com",
+                Style = "mapbox://styles/*yourName*/fcgh3v434k564h65",
+                Sprite = "mapbox://sprites/*yourName*/432hjh646kjh4535kg64/4g52345fkj25fgghf4jg243234",
+                Glyphs = "mapbox://fonts/mapbox/{fontstack}/{range}.pbf",
+                MetaData = JObject.Parse(metaData),
+                Sources = sources,
+                Layers = JsonConvert.DeserializeObject<List<Layer>>(layers, new JsonSerializerSettings { MissingMemberHandling = MissingMemberHandling.Ignore }) ?? new List<Layer>(),
+
+                Created = "2022-11-27T23:15:45.570Z",
+                Modified = "2022-11-28T13:34:08.708Z",
+                Id = "dsaf67ads6ad8sfasdf8ads",
+                Owner = "*youName*",
+                Projection = JObject.Parse(@"{""name"": ""globe""}"),
+                Visibility = "private",
+                Protected = false,
+                Draft = false,
+                Bounds = null,
+                Version = 8,
+                Name = "Map",
+            };
+    }
+
+    public void SetEditMode(bool allowAddNew, bool firstRender = false)
+    {
+        if (allowAddNew)
+        {
+            mapConfig!.MapClickHandler = new MapClickEvent { Action = AddEntityAsync, SuppressLayerClickEvents = true };
+        }
+        else
+        {
+            mapConfig!.MapClickHandler = null;
+        }
+
+        if (!firstRender)
+        {
+            _ = mapRef?.InitMapAsync();
+        }
+    }
+
+    /// <summary>
+    /// These images must be located in your "wwwroot"-folder and must be set to "content" and "copy if newer".
+    /// </summary>
+    /// <returns></returns>
+    private static List<Image> GetImages()
+    {
+        return new List<Image>
+            {
+                new Image { Id = "bolt", Url = "images/bolt.png" },
+                new Image { Id = "battery_full", Url = "images/battery_full.png" },
+                new Image { Id = "factory", Url = "images/factory.png" },
+            };
+    }
+}
+
+@functions {
+    public class Asset
+    {
+        public Guid Id { get; set; }
+
+        public string? Name { get; set; }
+
+        public Position? Location { get; set; }
+    }
+}
