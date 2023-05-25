@@ -1,12 +1,6 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using BAMCIS.GeoJSON;
+using Mapbox.Razor.Extensions;
 using Mapbox.Razor.Helper;
 using Mapbox.Razor.Models;
-using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Web;
 
 namespace Mapbox.Razor.Views
 {
@@ -41,19 +35,9 @@ namespace Mapbox.Razor.Views
 
         private void UpdateMapBounds()
         {
-             if (MapConfiguration?.Bounds?.Count > 2)
+            if (MapConfiguration?.Bounds?.Count > 2)
             {
-                var minLat = MapConfiguration.Bounds.Min(x => x.Latitude);
-                var maxLat = MapConfiguration.Bounds.Max(x => x.Latitude);
-
-                var minLong = MapConfiguration.Bounds.Min(x => x.Longitude);
-                var maxLong = MapConfiguration.Bounds.Max(x => x.Longitude);
-
-                MapConfiguration.Bounds = new List<Position>
-                {
-                    new Position(maxLong, minLat),
-                    new Position(minLong, maxLat),
-                };
+                MapConfiguration.Bounds = MapConfiguration.Bounds.GetOuterBounds();
             }
             else if (MapConfiguration?.Bounds?.Count == 0)
             {

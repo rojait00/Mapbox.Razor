@@ -13,6 +13,7 @@
 
   <ItemGroup>
     <PackageReference Include="DartSassBuilder" Version="1.0.0" />
+    <PackageReference Include="EntityFramework" Version="6.4.4" />
     <PackageReference Include="GeoJSON" Version="2.3.1" />
     <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="7.0.5" />
     <PackageReference Include="Microsoft.SqlServer.Types" Version="160.1000.6" />
