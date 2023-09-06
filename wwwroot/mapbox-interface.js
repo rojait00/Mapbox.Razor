@@ -112,9 +112,15 @@ export function removeControl(id) {
     }
 }
 
-export function addEventlistner(onEventId, forLayer, mapInterfaceRef) {
+export function addLayerEventlistner(onEventId, forLayer, mapInterfaceRef) {
     window.map.on(onEventId, forLayer, (e) => {
-        mapInterfaceRef.invokeMethodAsync("HandleEvent", onEventId, forLayer);
+        mapInterfaceRef.invokeMethodAsync("HandleLayerEvent", onEventId, forLayer);
+    });
+}
+
+export function addMapEventlistner(onEventId, mapInterfaceRef) {
+    window.map.on(onEventId, () => {
+        mapInterfaceRef.invokeMethodAsync("HandleMapEvent", onEventId);
     });
 }
 
@@ -139,4 +145,8 @@ export function addOnMapClickEventlistner(mapInterfaceRef) {
             mapInterfaceRef.invokeMethodAsync("HandleMapClickEvent", e.lngLat.lat, e.lngLat.lng);
         }
     });
+}
+
+export function selectItems(items) {
+    // todo
 }

@@ -17,7 +17,8 @@ namespace Mapbox.Razor.Helper
         public Task RemoveLayerAsync(string id);
         public Task AddControlAsync(string type, string controlJson);
         public Task RemoveControlAsync(string id);
-        public Task AddEventlistnerAsync(string onEventId, string forLayer, Action<LayerEventArgs> action);
+        public Task AddLayerEventlistnerAsync(string onEventId, string forLayer, Action<LayerEventArgs> action);
+        public Task AddMapEventlistnerAsync(string onEventId, Action<LayerEventArgs> action);
         public Task AddOnLayerClickEventlistnerAsync(string forLayer, Action<LayerClickEventArgs> action);
         public Task AddOnMapClickEventlistnerAsync(Action<MapClickEventArgs> action);
 
@@ -25,8 +26,11 @@ namespace Mapbox.Razor.Helper
         [JSInvokable("HandleOnMapLoadAsync")]
         public Task HandleOnMapLoadAsync();
 
-        [JSInvokable("HandleEvent")]
-        public void HandleEvent(string onEventId, string forLayer);
+        [JSInvokable("HandleMapEvent")]
+        public void HandleMapEvent(string onEventId, string forLayer);
+
+        [JSInvokable("HandleLayerEvent")]
+        public void HandleLayerEvent(string onEventId, string forLayer);
 
         [JSInvokable("HandleLayerClickEvent")]
         public void HandleLayerClickEvent(string forLayer, double lat, double lng, Dictionary<string, dynamic> properties);

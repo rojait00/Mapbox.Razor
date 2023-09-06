@@ -39,10 +39,6 @@ namespace Mapbox.Razor.Views
             {
                 MapConfiguration.Bounds = MapConfiguration.Bounds.GetOuterBounds();
             }
-            else if (MapConfiguration?.Bounds?.Count == 0)
-            {
-                //MapConfiguration.Bounds = null;
-            }
         }
     }
 }

@@ -10,6 +10,7 @@ namespace Mapbox.Razor.Helper
         private Action<MapClickEventArgs>? onMapClicked = null;
         private readonly Dictionary<string, Action<LayerClickEventArgs>> onLayerClicked = new();
         private readonly Dictionary<(string layer, string eventId), Action<LayerEventArgs>> onLayerEvent = new();
+        private readonly Dictionary<string, Action<MapEventArgs>> onMapEvent = new();
 
         private readonly Lazy<Task<IJSObjectReference>> moduleTask;
         private readonly DotNetObjectReference<MapboxInterface> mapInterfaceRef;
@@ -44,7 +45,8 @@ namespace Mapbox.Razor.Helper
             await AddControlsAsync();
             await AddOnLayerClickEventlistnersAsync();
             await AddOnMapClickEventlistnersAsync();
-            await AddEventlistnersAsync();
+            await AddLayerEventlistnersAsync();
+            await AddMapEventlistnersAsync();
         }
 
         #region foreach
@@ -96,11 +98,19 @@ namespace Mapbox.Razor.Helper
             }
         }
 
-        private async Task AddEventlistnersAsync()
+        private async Task AddLayerEventlistnersAsync()
         {
             foreach (var eventDetails in mapConfiguration.LayerEventHandler)
             {
-                await AddEventlistnerAsync(eventDetails.LayerId, eventDetails.EventId, eventDetails.Action);
+                await AddLayerEventlistnerAsync(eventDetails.LayerId, eventDetails.EventId, eventDetails.Action);
+            }
+        }
+
+        private async Task AddMapEventlistnersAsync()
+        {
+            foreach (var eventDetails in mapConfiguration.MapEventHandler)
+            {
+                await AddMapEventlistnerAsync(eventDetails.EventId, eventDetails.Action);
             }
         }
         #endregion
@@ -155,11 +165,18 @@ namespace Mapbox.Razor.Helper
             await module.InvokeAsync<string>("removeControl", id);
         }
 
-        public async Task AddEventlistnerAsync(string onEventId, string forLayer, Action<LayerEventArgs> action)
+        public async Task AddLayerEventlistnerAsync(string onEventId, string forLayer, Action<LayerEventArgs> action)
         {
             onLayerEvent[(layer: forLayer, eventId: onEventId)] = action;
             var module = await moduleTask.Value;
             await module.InvokeAsync<string>("addEventlistner", onEventId, forLayer, mapInterfaceRef);
+        }
+
+        public async Task AddMapEventlistnerAsync(string onEventId, Action<MapEventArgs> action)
+        {
+            onMapEvent[onEventId] = action;
+            var module = await moduleTask.Value;
+            await module.InvokeAsync<string>("addMapEventlistner", onEventId, mapInterfaceRef);
         }
 
         public async Task AddOnLayerClickEventlistnerAsync(string forLayer, Action<LayerClickEventArgs> action)
