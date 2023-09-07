@@ -6,7 +6,7 @@ namespace Mapbox.Razor.Views
 {
     public partial class Map
     {
-        private const string mapContainerId = "map";
+        private const string mapContainerId = "mapbox-container";
 
         private MapboxInterface? map;
 

@@ -11,6 +11,8 @@ namespace Mapbox.Razor.Models.Events
     {
         public string LayerId { get; set; }
 
+        public bool ChangeCursorOnHover { get; set; } = true;
+
         public Action<LayerClickEventArgs> Action { get; set; }
     }
 }

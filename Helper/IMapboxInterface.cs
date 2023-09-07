@@ -18,8 +18,8 @@ namespace Mapbox.Razor.Helper
         public Task AddControlAsync(string type, string controlJson);
         public Task RemoveControlAsync(string id);
         public Task AddLayerEventlistnerAsync(string onEventId, string forLayer, Action<LayerEventArgs> action);
-        public Task AddMapEventlistnerAsync(string onEventId, Action<LayerEventArgs> action);
-        public Task AddOnLayerClickEventlistnerAsync(string forLayer, Action<LayerClickEventArgs> action);
+        public Task AddMapEventlistnerAsync(string onEventId, Action<MapEventArgs> action);
+        public Task AddOnLayerClickEventlistnerAsync(string forLayer, Action<LayerClickEventArgs> action, bool changeCursorOnHover);
         public Task AddOnMapClickEventlistnerAsync(Action<MapClickEventArgs> action);
 
         // callbacks https://regex101.com/r/nXjaK7/1
@@ -27,7 +27,7 @@ namespace Mapbox.Razor.Helper
         public Task HandleOnMapLoadAsync();
 
         [JSInvokable("HandleMapEvent")]
-        public void HandleMapEvent(string onEventId, string forLayer);
+        public void HandleMapEvent(string onEventId);
 
         [JSInvokable("HandleLayerEvent")]
         public void HandleLayerEvent(string onEventId, string forLayer);

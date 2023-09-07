@@ -28,7 +28,7 @@ namespace Mapbox.Razor.Helper
 
         public async Task InitMapAsync()
         {
-            if(mapConfiguration.Bounds?.Count == 0)
+            if (mapConfiguration.Bounds?.Count == 0)
             {
                 mapConfiguration.Bounds = null;
             }
@@ -86,13 +86,13 @@ namespace Mapbox.Razor.Helper
         {
             foreach (var eventDetails in mapConfiguration.LayerClickHandler)
             {
-                await AddOnLayerClickEventlistnerAsync(eventDetails.LayerId, eventDetails.Action);
+                await AddOnLayerClickEventlistnerAsync(eventDetails.LayerId, eventDetails.Action, eventDetails.ChangeCursorOnHover);
             }
         }
 
         private async Task AddOnMapClickEventlistnersAsync()
         {
-            if(mapConfiguration.MapClickHandler != null)
+            if (mapConfiguration.MapClickHandler != null)
             {
                 await AddOnMapClickEventlistnerAsync(mapConfiguration.MapClickHandler.Action);
             }
@@ -179,11 +179,11 @@ namespace Mapbox.Razor.Helper
             await module.InvokeAsync<string>("addMapEventlistner", onEventId, mapInterfaceRef);
         }
 
-        public async Task AddOnLayerClickEventlistnerAsync(string forLayer, Action<LayerClickEventArgs> action)
+        public async Task AddOnLayerClickEventlistnerAsync(string forLayer, Action<LayerClickEventArgs> action, bool changeCursorOnHover)
         {
             onLayerClicked[forLayer] = action;
             var module = await moduleTask.Value;
-            await module.InvokeAsync<string>("addOnLayerClickEventlistner", forLayer, mapInterfaceRef);
+            await module.InvokeAsync<string>("addOnLayerClickEventlistner", forLayer, mapInterfaceRef, changeCursorOnHover);
         }
 
         /// <summary>
@@ -198,8 +198,18 @@ namespace Mapbox.Razor.Helper
             await module.InvokeAsync<string>("addOnMapClickEventlistner", mapInterfaceRef);
         }
 
-        [JSInvokable("HandleEvent")]
-        public void HandleEvent(string onEventId, string forLayer)
+
+        [JSInvokable("HandleMapEvent")]
+        public void HandleMapEvent(string onEventId)
+        {
+            if (onMapEvent.TryGetValue(onEventId, out Action<MapEventArgs>? value))
+            {
+                value.Invoke(new MapEventArgs { EventId = onEventId });
+            }
+        }
+
+        [JSInvokable("HandleLayerEvent")]
+        public void HandleLayerEvent(string onEventId, string forLayer)
         {
             if (onLayerEvent.TryGetValue((layer: forLayer, eventId: onEventId), out Action<LayerEventArgs>? value))
             {
