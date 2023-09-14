@@ -39,5 +39,7 @@ namespace Mapbox.Razor.Models
 
         [JsonProperty("metadata")]
         public dynamic? MeteData { get; set; }
+        [JsonIgnore]
+        public bool Clickable { get; set; } = false;
     }
 }

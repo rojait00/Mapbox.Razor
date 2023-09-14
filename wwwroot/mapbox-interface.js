@@ -123,8 +123,15 @@ export function addLayerEventlistner(onEventId, forLayer, mapInterfaceRef) {
 }
 
 export function addMapEventlistner(onEventId, mapInterfaceRef) {
+    
     window.map.on(onEventId, () => {
-        mapInterfaceRef.invokeMethodAsync("HandleMapEvent", onEventId);
+        const coordinateList = window.map.getBounds();
+        const swlat = coordinateList._sw.lat;
+        const swlng = coordinateList._sw.lng;
+        const nelat = coordinateList._ne.lat;
+        const nelng = coordinateList._ne.lng;
+
+        mapInterfaceRef.invokeMethodAsync("HandleMapEvent", onEventId, swlat, swlng, nelat, nelng);
     });
 }
 

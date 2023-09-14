@@ -1,4 +1,5 @@
-﻿using Mapbox.Razor.Models.Events;
+﻿using Mapbox.Razor.Models;
+using Mapbox.Razor.Models.Events;
 using Microsoft.Extensions.Logging;
 using Microsoft.JSInterop;
 using System;
@@ -27,7 +28,7 @@ namespace Mapbox.Razor.Helper
         public Task HandleOnMapLoadAsync();
 
         [JSInvokable("HandleMapEvent")]
-        public void HandleMapEvent(string onEventId);
+        public void HandleMapEvent(string onEventId, double swlat, double swlng, double nelat, double nelng);
 
         [JSInvokable("HandleLayerEvent")]
         public void HandleLayerEvent(string onEventId, string forLayer);

@@ -200,11 +200,15 @@ namespace Mapbox.Razor.Helper
 
 
         [JSInvokable("HandleMapEvent")]
-        public void HandleMapEvent(string onEventId)
+        public void HandleMapEvent(string onEventId, double swlat, double swlng, double nelat, double nelng)
         {
             if (onMapEvent.TryGetValue(onEventId, out Action<MapEventArgs>? value))
             {
-                value.Invoke(new MapEventArgs { EventId = onEventId });
+                //if(visibleLayers.Any())
+                //{
+                //    value.Invoke(new MapEventArgs { EventId = onEventId, VisibleLayers = visibleLayers });
+                //}
+                value.Invoke(new MapEventArgs { EventId = onEventId, SouthWestBorder = new Point(new Position(swlng, swlat)), NorthEastBorder = new Point(new Position(nelng, nelat)) });
             }
         }
 
