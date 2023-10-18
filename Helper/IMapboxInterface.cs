@@ -1,4 +1,5 @@
-﻿using Mapbox.Razor.Models;
+﻿using BAMCIS.GeoJSON;
+using Mapbox.Razor.Models;
 using Mapbox.Razor.Models.Events;
 using Microsoft.Extensions.Logging;
 using Microsoft.JSInterop;
@@ -10,9 +11,11 @@ namespace Mapbox.Razor.Helper
     {
         // to js https://regex101.com/r/qdqoxA/1
         public Task InitMapAsync();
+        public Task FitBoundsAsync(string boundsJson);
         public Task AddImageAsync(string id, string url);
         public Task RemoveImageAsync(string id);
         public Task AddSourceAsync(string id, string sourceJson);
+        public Task UpdateSourceAsync(string id, string geoJson);
         public Task RemoveSourceAsync(string id);
         public Task AddLayerAsync(string layerJson);
         public Task RemoveLayerAsync(string id);

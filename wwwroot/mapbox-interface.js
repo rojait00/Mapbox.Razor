@@ -1,5 +1,11 @@
 ﻿var initState = undefined;
 
+function fitBoundsInt(bounds) {
+    window.map.fitBounds(bounds, {
+        padding: { top: 50, bottom: 50, left: 50, right: 50 }
+    });
+}
+
 export function initMap(mapInterfaceRef, mapConfigurationJson) {
     var mapConfiguration = JSON.parse(mapConfigurationJson);
 
@@ -15,16 +21,17 @@ export function initMap(mapInterfaceRef, mapConfigurationJson) {
             }
         });
     }
-    else if (initState === "Finished"){
+    else if (initState === "Finished") {
         mapInterfaceRef.invokeMethodAsync("HandleOnMapLoadAsync");
     }
 
     if (mapConfiguration.bounds?.length) {
-        // ToDo: if did not work tried empty list
-        window.map.fitBounds(mapConfiguration.bounds, {
-            padding: { top: 50, bottom: 50, left: 50, right: 50 }
-        });
+        fitBoundsInt(mapConfiguration.bounds);
     }
+}
+
+export function fitBounds(boundsJson) {
+    fitBoundsInt(JSON.parse(boundsJson));
 }
 
 export function addImage(id, url) {
@@ -46,9 +53,22 @@ export function removeImage(id) {
 
 export function addSource(id, sourceJson) {
     var mapSource = window.map.getSource(id);
+    var source = JSON.parse(sourceJson);
 
     if (typeof mapSource === 'undefined') {
-        window.map.addSource(id, JSON.parse(sourceJson));
+        window.map.addSource(id, source);
+    }
+    else {
+        updateSource(id, JSON.stringify(source.data));
+    }
+}
+
+export function updateSource(id, geoJson) {
+    var mapSource = window.map.getSource(id);
+    var data = JSON.parse(geoJson);
+
+    if (typeof mapSource !== 'undefined') {
+        mapSource.setData(data);
     }
 }
 
@@ -123,15 +143,15 @@ export function addLayerEventlistner(onEventId, forLayer, mapInterfaceRef) {
 }
 
 export function addMapEventlistner(onEventId, mapInterfaceRef) {
-    
+
     window.map.on(onEventId, () => {
         const coordinateList = window.map.getBounds();
-        const swlat = coordinateList._sw.lat;
-        const swlng = coordinateList._sw.lng;
-        const nelat = coordinateList._ne.lat;
-        const nelng = coordinateList._ne.lng;
+        const southLat = coordinateList._sw.lat;
+        const westLng = coordinateList._sw.lng;
+        const northLat = coordinateList._ne.lat;
+        const eastLng = coordinateList._ne.lng;
 
-        mapInterfaceRef.invokeMethodAsync("HandleMapEvent", onEventId, swlat, swlng, nelat, nelng);
+        mapInterfaceRef.invokeMethodAsync("HandleMapEvent", onEventId, southLat, westLng, northLat, eastLng);
     });
 }
 

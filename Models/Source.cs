@@ -36,7 +36,7 @@ namespace Mapbox.Razor.Models
         {
             get
             {
-                if (DataUrl != null)
+                if (!string.IsNullOrEmpty(DataUrl))
                 {
                     return DataUrl;
                 }

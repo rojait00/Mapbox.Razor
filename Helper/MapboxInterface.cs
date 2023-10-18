@@ -1,7 +1,10 @@
 ﻿using BAMCIS.GeoJSON;
+using Mapbox.Razor.Extensions;
 using Mapbox.Razor.Models;
 using Mapbox.Razor.Models.Events;
 using Microsoft.JSInterop;
+using Newtonsoft.Json;
+using System.Security.Policy;
 
 namespace Mapbox.Razor.Helper
 {
@@ -115,8 +118,13 @@ namespace Mapbox.Razor.Helper
         }
         #endregion
 
-
         #region from Interface
+        public async Task FitBoundsAsync(string boundsJson)
+        {
+            var module = await moduleTask.Value;
+            await module.InvokeAsync<string>("fitBounds", boundsJson);
+        }
+
         public async Task AddImageAsync(string id, string url)
         {
             var module = await moduleTask.Value;
@@ -133,6 +141,12 @@ namespace Mapbox.Razor.Helper
         {
             var module = await moduleTask.Value;
             await module.InvokeAsync<string>("addSource", id, sourceJson);
+        }
+
+        public async Task UpdateSourceAsync(string id, string geoJson)
+        {
+            var module = await moduleTask.Value;
+            await module.InvokeAsync<string>("updateSource", id, geoJson);
         }
 
         public async Task RemoveSourceAsync(string id)
@@ -200,15 +214,16 @@ namespace Mapbox.Razor.Helper
 
 
         [JSInvokable("HandleMapEvent")]
-        public void HandleMapEvent(string onEventId, double swlat, double swlng, double nelat, double nelng)
+        public void HandleMapEvent(string onEventId, double southLat, double westLng, double northLat, double eastLng)
         {
             if (onMapEvent.TryGetValue(onEventId, out Action<MapEventArgs>? value))
             {
-                //if(visibleLayers.Any())
-                //{
-                //    value.Invoke(new MapEventArgs { EventId = onEventId, VisibleLayers = visibleLayers });
-                //}
-                value.Invoke(new MapEventArgs { EventId = onEventId, SouthWestBorder = new Point(new Position(swlng, swlat)), NorthEastBorder = new Point(new Position(nelng, nelat)) });
+                value.Invoke(new MapEventArgs
+                {
+                    EventId = onEventId,
+                    SouthWestBorder = new Point(new Position(westLng, southLat)),
+                    NorthEastBorder = new Point(new Position(eastLng, northLat))
+                });
             }
         }
 
