@@ -45,6 +45,18 @@ namespace Mapbox.Razor.Views
         }
 
         /// <summary>
+        /// Adds all Layers in MapConfiguration if not added yet
+        /// </summary>
+        /// <returns></returns>
+        public async Task UpdateLayersAsync()
+        {
+            if (map != null)
+            {
+                await map.AddLayersAsync();
+            }
+        }
+
+        /// <summary>
         /// Is triggered automatically.
         /// Can be called to reload config.
         /// </summary>

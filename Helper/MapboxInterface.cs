@@ -157,8 +157,14 @@ namespace Mapbox.Razor.Helper
 
         public async Task AddLayerAsync(string layerJson)
         {
-            var module = await moduleTask.Value;
-            await module.InvokeAsync<string>("addLayer", layerJson);
+            try
+            {
+                var module = await moduleTask.Value;
+                await module.InvokeAsync<string>("addLayer", layerJson);
+            }
+            catch
+            {
+            }
         }
 
         public async Task RemoveLayerAsync(string id)
