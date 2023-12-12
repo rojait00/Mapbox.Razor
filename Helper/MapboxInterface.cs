@@ -39,6 +39,12 @@ namespace Mapbox.Razor.Helper
             await module.InvokeAsync<string>("initMap", mapInterfaceRef, mapConfiguration.GetJson());
         }
 
+        public async Task RemoveAsync()
+        {
+            var module = await moduleTask.Value;
+            await module.InvokeAsync<string>("remove");
+        }
+
         [JSInvokable("HandleOnMapLoadAsync")]
         public async Task HandleOnMapLoadAsync()
         {
@@ -65,7 +71,13 @@ namespace Mapbox.Razor.Helper
         {
             foreach (var source in mapConfiguration.Sources)
             {
-                await AddSourceAsync(source.Id, source.GetJson());
+                try
+                {
+                    await AddSourceAsync(source.Id, source.GetJson());
+                }
+                catch
+                {
+                }
             }
         }
 
@@ -119,6 +131,12 @@ namespace Mapbox.Razor.Helper
         #endregion
 
         #region from Interface
+        public async Task UpdateMapStyleAsync(string mapStyleUrl)
+        {
+            var module = await moduleTask.Value;
+            await module.InvokeAsync<string>("updateMapStyle", mapStyleUrl);
+        }
+
         public async Task FitBoundsAsync(string boundsJson)
         {
             var module = await moduleTask.Value;

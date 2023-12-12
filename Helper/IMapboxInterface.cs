@@ -11,6 +11,8 @@ namespace Mapbox.Razor.Helper
     {
         // to js https://regex101.com/r/qdqoxA/1
         public Task InitMapAsync();
+        public Task RemoveAsync();
+        public Task UpdateMapStyleAsync(string mapStyleUrl);
         public Task FitBoundsAsync(string boundsJson);
         public Task AddImageAsync(string id, string url);
         public Task RemoveImageAsync(string id);

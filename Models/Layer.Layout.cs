@@ -50,7 +50,7 @@ namespace Mapbox.Razor.Models
             public bool? IconIgnorePlacement { get; set; }
 
             [JsonProperty("text-size")]
-            public List<dynamic>? TextSize { get; set; }
+            public dynamic? TextSize { get; set; }
         }
     }
 }

@@ -41,5 +41,8 @@ namespace Mapbox.Razor.Models
         public dynamic? MeteData { get; set; }
         [JsonIgnore]
         public bool Clickable { get; set; } = false;
+
+        [JsonProperty("dashArraySequence")]
+        public List<List<double>>? DashArraySequence { get; set; }
     }
 }

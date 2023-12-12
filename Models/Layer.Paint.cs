@@ -81,6 +81,12 @@ namespace Mapbox.Razor.Models
 
             [JsonProperty("text-color")]
             public dynamic? TextColor { get; set; }
+
+            [JsonProperty("line-dasharray")]
+            public List<double>? LineDasharray { get; set; }
+
+            [JsonProperty("line-opacity")]
+            public double? LineOpacity { get; set; } = null;
         }
     }
 }

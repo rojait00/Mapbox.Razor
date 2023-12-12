@@ -13,6 +13,7 @@ export function initMap(mapInterfaceRef, mapConfigurationJson) {
         initState = "In Progress";
         window.map = new mapboxgl.Map(mapConfiguration);
         window.mapControls = {};
+        window.layerStartTimes = {};
 
         window.map.on('load', () => {
             {
@@ -28,6 +29,18 @@ export function initMap(mapInterfaceRef, mapConfigurationJson) {
     if (mapConfiguration.bounds?.length) {
         fitBoundsInt(mapConfiguration.bounds);
     }
+}
+
+export function remove() {
+    if (window.map !== undefined) {
+        window.map.remove();
+    }
+    initState = undefined
+    window.map = undefined;
+    window.mapControls = undefined;
+}
+export function updateMapStyle(mapStyleUrl) {
+    window.map.setStyle(mapStyleUrl);
 }
 
 export function fitBounds(boundsJson) {
@@ -65,9 +78,9 @@ export function addSource(id, sourceJson) {
 
 export function updateSource(id, geoJson) {
     var mapSource = window.map.getSource(id);
-    var data = JSON.parse(geoJson);
 
     if (typeof mapSource !== 'undefined') {
+        var data = JSON.parse(geoJson);
         mapSource.setData(data);
     }
 }
@@ -87,14 +100,43 @@ export function addLayer(layerJson) {
 
     if (typeof mapLayer === 'undefined') {
         window.map.addLayer(layerObj);
+
+        if (layerObj.dashArraySequence !== undefined) {
+            let step = 0;
+            let startTime = new Date().getTime();
+
+            window.layerStartTimes[`${layerObj.id}`] = startTime;
+            function animateDashArray(timestamp) {
+                if (window.layerStartTimes[`${layerObj.id}`] > startTime) {
+                    return;
+                }
+
+                var layerToAnimate = window.map.getLayer(layerObj.id);
+
+                if (typeof layerToAnimate !== 'undefined') {
+                    step = (step + 1) % layerObj.dashArraySequence.length;
+                    window.map.setPaintProperty(
+                        layerObj.id,
+                        'line-dasharray',
+                        layerObj.dashArraySequence[step]
+                    );
+
+                    // Request the next frame of the animation.
+                    requestAnimationFrame(animateDashArray);
+                }
+            }
+
+            // start the animation
+            animateDashArray(0);
+        }
     }
 }
 
 export function removeLayer(id) {
-    var mapSource = window.map.getSource(id);
+    var layer = window.map.getLayer(id);
 
-    if (typeof mapSource !== 'undefined') {
-        window.map.removeSource(id);
+    if (typeof layer !== 'undefined') {
+        window.map.removeLayer(id);
     }
 }
 
