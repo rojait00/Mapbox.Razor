@@ -111,8 +111,13 @@ export function addLayer(layerJson) {
                     return;
                 }
 
-                var layerToAnimate = window.map.getLayer(layerObj.id);
+                if (window.map === undefined) {
+                    // This may happen once. Request the next frame of the animation.
+                    requestAnimationFrame(animateDashArray);
+                    return;
+                }
 
+                var layerToAnimate = window.map.getLayer(layerObj.id);
                 if (typeof layerToAnimate !== 'undefined') {
                     step = (step + 1) % layerObj.dashArraySequence.length;
                     window.map.setPaintProperty(

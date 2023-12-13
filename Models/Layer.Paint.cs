@@ -20,7 +20,7 @@ namespace Mapbox.Razor.Models
             /// Optional number between 0 and 1 inclusive.
             /// </summary>
             [JsonProperty("fill-opacity")]
-            public List<dynamic>? FillOpacity { get; set; }
+            public dynamic? FillOpacity { get; set; }
 
             [JsonProperty("fill-pattern")]
             public dynamic? FillPattern { get; set; }
