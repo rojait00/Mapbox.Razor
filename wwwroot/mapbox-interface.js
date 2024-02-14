@@ -1,5 +1,11 @@
 ﻿var initState = undefined;
 
+function fitBoundsInt(bounds) {
+    window.map.fitBounds(bounds, {
+        padding: { top: 50, bottom: 50, left: 50, right: 50 }
+    });
+}
+
 export function initMap(mapInterfaceRef, mapConfigurationJson) {
     var mapConfiguration = JSON.parse(mapConfigurationJson);
 
@@ -7,6 +13,7 @@ export function initMap(mapInterfaceRef, mapConfigurationJson) {
         initState = "In Progress";
         window.map = new mapboxgl.Map(mapConfiguration);
         window.mapControls = {};
+        window.layerStartTimes = {};
 
         window.map.on('load', () => {
             {
@@ -15,16 +22,29 @@ export function initMap(mapInterfaceRef, mapConfigurationJson) {
             }
         });
     }
-    else if (initState === "Finished"){
+    else if (initState === "Finished") {
         mapInterfaceRef.invokeMethodAsync("HandleOnMapLoadAsync");
     }
 
     if (mapConfiguration.bounds?.length) {
-        // ToDo: if did not work tried empty list
-        window.map.fitBounds(mapConfiguration.bounds, {
-            padding: { top: 50, bottom: 50, left: 50, right: 50 }
-        });
+        fitBoundsInt(mapConfiguration.bounds);
     }
+}
+
+export function remove() {
+    if (window.map !== undefined) {
+        window.map.remove();
+    }
+    initState = undefined
+    window.map = undefined;
+    window.mapControls = undefined;
+}
+export function updateMapStyle(mapStyleUrl) {
+    window.map.setStyle(mapStyleUrl);
+}
+
+export function fitBounds(boundsJson) {
+    fitBoundsInt(JSON.parse(boundsJson));
 }
 
 export function addImage(id, url) {
@@ -46,9 +66,22 @@ export function removeImage(id) {
 
 export function addSource(id, sourceJson) {
     var mapSource = window.map.getSource(id);
+    var source = JSON.parse(sourceJson);
 
     if (typeof mapSource === 'undefined') {
-        window.map.addSource(id, JSON.parse(sourceJson));
+        window.map.addSource(id, source);
+    }
+    else {
+        updateSource(id, JSON.stringify(source.data));
+    }
+}
+
+export function updateSource(id, geoJson) {
+    var mapSource = window.map.getSource(id);
+
+    if (typeof mapSource !== 'undefined') {
+        var data = JSON.parse(geoJson);
+        mapSource.setData(data);
     }
 }
 
@@ -67,14 +100,48 @@ export function addLayer(layerJson) {
 
     if (typeof mapLayer === 'undefined') {
         window.map.addLayer(layerObj);
+
+        if (layerObj.dashArraySequence !== undefined) {
+            let step = 0;
+            let startTime = new Date().getTime();
+
+            window.layerStartTimes[`${layerObj.id}`] = startTime;
+            function animateDashArray(timestamp) {
+                if (window.layerStartTimes[`${layerObj.id}`] > startTime) {
+                    return;
+                }
+
+                if (window.map === undefined) {
+                    // This may happen once. Request the next frame of the animation.
+                    requestAnimationFrame(animateDashArray);
+                    return;
+                }
+
+                var layerToAnimate = window.map.getLayer(layerObj.id);
+                if (typeof layerToAnimate !== 'undefined') {
+                    step = (step + 1) % layerObj.dashArraySequence.length;
+                    window.map.setPaintProperty(
+                        layerObj.id,
+                        'line-dasharray',
+                        layerObj.dashArraySequence[step]
+                    );
+
+                    // Request the next frame of the animation.
+                    requestAnimationFrame(animateDashArray);
+                }
+            }
+
+            // start the animation
+            animateDashArray(0);
+        }
     }
 }
 
 export function removeLayer(id) {
-    var mapSource = window.map.getSource(id);
+    var layer = window.map.getLayer(id);
 
-    if (typeof mapSource !== 'undefined') {
-        window.map.removeSource(id);
+    if (typeof layer !== 'undefined') {
+        window.map.removeLayer(id);
     }
 }
 
@@ -123,8 +190,15 @@ export function addLayerEventlistner(onEventId, forLayer, mapInterfaceRef) {
 }
 
 export function addMapEventlistner(onEventId, mapInterfaceRef) {
+
     window.map.on(onEventId, () => {
-        mapInterfaceRef.invokeMethodAsync("HandleMapEvent", onEventId);
+        const coordinateList = window.map.getBounds();
+        const southLat = coordinateList._sw.lat;
+        const westLng = coordinateList._sw.lng;
+        const northLat = coordinateList._ne.lat;
+        const eastLng = coordinateList._ne.lng;
+
+        mapInterfaceRef.invokeMethodAsync("HandleMapEvent", onEventId, southLat, westLng, northLat, eastLng);
     });
 }
 

@@ -1,7 +1,10 @@
 ﻿using BAMCIS.GeoJSON;
+using Mapbox.Razor.Extensions;
 using Mapbox.Razor.Models;
 using Mapbox.Razor.Models.Events;
 using Microsoft.JSInterop;
+using Newtonsoft.Json;
+using System.Security.Policy;
 
 namespace Mapbox.Razor.Helper
 {
@@ -36,6 +39,12 @@ namespace Mapbox.Razor.Helper
             await module.InvokeAsync<string>("initMap", mapInterfaceRef, mapConfiguration.GetJson());
         }
 
+        public async Task RemoveAsync()
+        {
+            var module = await moduleTask.Value;
+            await module.InvokeAsync<string>("remove");
+        }
+
         [JSInvokable("HandleOnMapLoadAsync")]
         public async Task HandleOnMapLoadAsync()
         {
@@ -62,7 +71,13 @@ namespace Mapbox.Razor.Helper
         {
             foreach (var source in mapConfiguration.Sources)
             {
-                await AddSourceAsync(source.Id, source.GetJson());
+                try
+                {
+                    await AddSourceAsync(source.Id, source.GetJson());
+                }
+                catch
+                {
+                }
             }
         }
 
@@ -115,8 +130,19 @@ namespace Mapbox.Razor.Helper
         }
         #endregion
 
-
         #region from Interface
+        public async Task UpdateMapStyleAsync(string mapStyleUrl)
+        {
+            var module = await moduleTask.Value;
+            await module.InvokeAsync<string>("updateMapStyle", mapStyleUrl);
+        }
+
+        public async Task FitBoundsAsync(string boundsJson)
+        {
+            var module = await moduleTask.Value;
+            await module.InvokeAsync<string>("fitBounds", boundsJson);
+        }
+
         public async Task AddImageAsync(string id, string url)
         {
             var module = await moduleTask.Value;
@@ -135,6 +161,12 @@ namespace Mapbox.Razor.Helper
             await module.InvokeAsync<string>("addSource", id, sourceJson);
         }
 
+        public async Task UpdateSourceAsync(string id, string geoJson)
+        {
+            var module = await moduleTask.Value;
+            await module.InvokeAsync<string>("updateSource", id, geoJson);
+        }
+
         public async Task RemoveSourceAsync(string id)
         {
             var module = await moduleTask.Value;
@@ -143,8 +175,14 @@ namespace Mapbox.Razor.Helper
 
         public async Task AddLayerAsync(string layerJson)
         {
-            var module = await moduleTask.Value;
-            await module.InvokeAsync<string>("addLayer", layerJson);
+            try
+            {
+                var module = await moduleTask.Value;
+                await module.InvokeAsync<string>("addLayer", layerJson);
+            }
+            catch
+            {
+            }
         }
 
         public async Task RemoveLayerAsync(string id)
@@ -200,11 +238,16 @@ namespace Mapbox.Razor.Helper
 
 
         [JSInvokable("HandleMapEvent")]
-        public void HandleMapEvent(string onEventId)
+        public void HandleMapEvent(string onEventId, double southLat, double westLng, double northLat, double eastLng)
         {
             if (onMapEvent.TryGetValue(onEventId, out Action<MapEventArgs>? value))
             {
-                value.Invoke(new MapEventArgs { EventId = onEventId });
+                value.Invoke(new MapEventArgs
+                {
+                    EventId = onEventId,
+                    SouthWestBorder = new Point(new Position(westLng, southLat)),
+                    NorthEastBorder = new Point(new Position(eastLng, northLat))
+                });
             }
         }
 

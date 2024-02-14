@@ -1,9 +1,4 @@
 ﻿using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Mapbox.Razor.Models
 {
@@ -39,5 +34,31 @@ namespace Mapbox.Razor.Models
 
         [JsonProperty("metadata")]
         public dynamic? MeteData { get; set; }
+        [JsonIgnore]
+        public bool Clickable { get; set; } = false;
+
+        [JsonProperty("dashArraySequence")]
+        public List<List<double>>? DashArraySequence { get; set; }
+
+        [JsonIgnore]
+        public double? AnimationSpeed { get; set; }
+
+        public void AddAnimation(double dashLength, double animationSpeed)
+        {
+            AnimationSpeed = animationSpeed;
+            DashArraySequence = new List<List<double>>();
+
+            double nrOfSteps = 30 / animationSpeed;
+            for (int i = 0; i - 1 < nrOfSteps; i++)
+            {
+                double currentStep = i * dashLength / nrOfSteps;
+                DashArraySequence.Add(new List<double> { currentStep, dashLength, dashLength - currentStep });
+            }
+            for (int i = 1; i < nrOfSteps; i++)
+            {
+                double currentStep = i * dashLength / nrOfSteps;
+                DashArraySequence.Add(new List<double> { 0.0, currentStep, dashLength, dashLength - currentStep });
+            }
+        }
     }
 }

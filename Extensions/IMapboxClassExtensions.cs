@@ -1,7 +1,7 @@
 ﻿using Mapbox.Razor.Models;
 using Newtonsoft.Json;
 
-namespace Mapbox.Razor.Helper
+namespace Mapbox.Razor.Extensions
 {
     internal static class IMapboxClassExtensions
     {

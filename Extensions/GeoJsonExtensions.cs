@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Mapbox.Razor.Helper
+namespace Mapbox.Razor.Extensions
 {
     public static class GeoJsonExtensions
     {

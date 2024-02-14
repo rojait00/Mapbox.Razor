@@ -13,8 +13,8 @@ namespace Mapbox.Razor.Models
             [JsonProperty("line-join")]
             public dynamic? LineJoin { get; set; }
 
-            //[JsonProperty("line-cap")]
-            //public List<dynamic>? LineCap { get; set; }
+            [JsonProperty("line-cap")]
+            public dynamic? LineCap { get; set; }
 
             [JsonProperty("text-field")]
             public dynamic? TextField { get; set; }
@@ -50,7 +50,7 @@ namespace Mapbox.Razor.Models
             public bool? IconIgnorePlacement { get; set; }
 
             [JsonProperty("text-size")]
-            public List<dynamic>? TextSize { get; set; }
+            public dynamic? TextSize { get; set; }
         }
     }
 }
