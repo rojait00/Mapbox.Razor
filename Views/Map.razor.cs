@@ -6,7 +6,7 @@ namespace Mapbox.Razor.Views
 {
     public partial class Map
     {
-        private const string mapContainerId = "map";
+        private const string mapContainerId = "mapbox-container";
 
         private MapboxInterface? map;
 
@@ -38,10 +38,6 @@ namespace Mapbox.Razor.Views
             if (MapConfiguration?.Bounds?.Count > 2)
             {
                 MapConfiguration.Bounds = MapConfiguration.Bounds.GetOuterBounds();
-            }
-            else if (MapConfiguration?.Bounds?.Count == 0)
-            {
-                //MapConfiguration.Bounds = null;
             }
         }
     }

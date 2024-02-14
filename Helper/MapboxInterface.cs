@@ -10,6 +10,7 @@ namespace Mapbox.Razor.Helper
         private Action<MapClickEventArgs>? onMapClicked = null;
         private readonly Dictionary<string, Action<LayerClickEventArgs>> onLayerClicked = new();
         private readonly Dictionary<(string layer, string eventId), Action<LayerEventArgs>> onLayerEvent = new();
+        private readonly Dictionary<string, Action<MapEventArgs>> onMapEvent = new();
 
         private readonly Lazy<Task<IJSObjectReference>> moduleTask;
         private readonly DotNetObjectReference<MapboxInterface> mapInterfaceRef;
@@ -27,7 +28,7 @@ namespace Mapbox.Razor.Helper
 
         public async Task InitMapAsync()
         {
-            if(mapConfiguration.Bounds?.Count == 0)
+            if (mapConfiguration.Bounds?.Count == 0)
             {
                 mapConfiguration.Bounds = null;
             }
@@ -44,7 +45,8 @@ namespace Mapbox.Razor.Helper
             await AddControlsAsync();
             await AddOnLayerClickEventlistnersAsync();
             await AddOnMapClickEventlistnersAsync();
-            await AddEventlistnersAsync();
+            await AddLayerEventlistnersAsync();
+            await AddMapEventlistnersAsync();
         }
 
         #region foreach
@@ -84,23 +86,31 @@ namespace Mapbox.Razor.Helper
         {
             foreach (var eventDetails in mapConfiguration.LayerClickHandler)
             {
-                await AddOnLayerClickEventlistnerAsync(eventDetails.LayerId, eventDetails.Action);
+                await AddOnLayerClickEventlistnerAsync(eventDetails.LayerId, eventDetails.Action, eventDetails.ChangeCursorOnHover);
             }
         }
 
         private async Task AddOnMapClickEventlistnersAsync()
         {
-            if(mapConfiguration.MapClickHandler != null)
+            if (mapConfiguration.MapClickHandler != null)
             {
                 await AddOnMapClickEventlistnerAsync(mapConfiguration.MapClickHandler.Action);
             }
         }
 
-        private async Task AddEventlistnersAsync()
+        private async Task AddLayerEventlistnersAsync()
         {
             foreach (var eventDetails in mapConfiguration.LayerEventHandler)
             {
-                await AddEventlistnerAsync(eventDetails.LayerId, eventDetails.EventId, eventDetails.Action);
+                await AddLayerEventlistnerAsync(eventDetails.LayerId, eventDetails.EventId, eventDetails.Action);
+            }
+        }
+
+        private async Task AddMapEventlistnersAsync()
+        {
+            foreach (var eventDetails in mapConfiguration.MapEventHandler)
+            {
+                await AddMapEventlistnerAsync(eventDetails.EventId, eventDetails.Action);
             }
         }
         #endregion
@@ -155,18 +165,25 @@ namespace Mapbox.Razor.Helper
             await module.InvokeAsync<string>("removeControl", id);
         }
 
-        public async Task AddEventlistnerAsync(string onEventId, string forLayer, Action<LayerEventArgs> action)
+        public async Task AddLayerEventlistnerAsync(string onEventId, string forLayer, Action<LayerEventArgs> action)
         {
             onLayerEvent[(layer: forLayer, eventId: onEventId)] = action;
             var module = await moduleTask.Value;
             await module.InvokeAsync<string>("addEventlistner", onEventId, forLayer, mapInterfaceRef);
         }
 
-        public async Task AddOnLayerClickEventlistnerAsync(string forLayer, Action<LayerClickEventArgs> action)
+        public async Task AddMapEventlistnerAsync(string onEventId, Action<MapEventArgs> action)
+        {
+            onMapEvent[onEventId] = action;
+            var module = await moduleTask.Value;
+            await module.InvokeAsync<string>("addMapEventlistner", onEventId, mapInterfaceRef);
+        }
+
+        public async Task AddOnLayerClickEventlistnerAsync(string forLayer, Action<LayerClickEventArgs> action, bool changeCursorOnHover)
         {
             onLayerClicked[forLayer] = action;
             var module = await moduleTask.Value;
-            await module.InvokeAsync<string>("addOnLayerClickEventlistner", forLayer, mapInterfaceRef);
+            await module.InvokeAsync<string>("addOnLayerClickEventlistner", forLayer, mapInterfaceRef, changeCursorOnHover);
         }
 
         /// <summary>
@@ -181,8 +198,18 @@ namespace Mapbox.Razor.Helper
             await module.InvokeAsync<string>("addOnMapClickEventlistner", mapInterfaceRef);
         }
 
-        [JSInvokable("HandleEvent")]
-        public void HandleEvent(string onEventId, string forLayer)
+
+        [JSInvokable("HandleMapEvent")]
+        public void HandleMapEvent(string onEventId)
+        {
+            if (onMapEvent.TryGetValue(onEventId, out Action<MapEventArgs>? value))
+            {
+                value.Invoke(new MapEventArgs { EventId = onEventId });
+            }
+        }
+
+        [JSInvokable("HandleLayerEvent")]
+        public void HandleLayerEvent(string onEventId, string forLayer)
         {
             if (onLayerEvent.TryGetValue((layer: forLayer, eventId: onEventId), out Action<LayerEventArgs>? value))
             {

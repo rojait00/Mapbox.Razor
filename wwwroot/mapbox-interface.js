@@ -1,17 +1,21 @@
-﻿export function initMap(mapInterfaceRef, mapConfigurationJson) {
+﻿var initState = undefined;
+
+export function initMap(mapInterfaceRef, mapConfigurationJson) {
     var mapConfiguration = JSON.parse(mapConfigurationJson);
 
-    if (window.map !== undefined) {
+    if (initState === undefined) {
+        initState = "In Progress";
         window.map = new mapboxgl.Map(mapConfiguration);
         window.mapControls = {};
 
         window.map.on('load', () => {
             {
                 mapInterfaceRef.invokeMethodAsync("HandleOnMapLoadAsync");
+                initState = "Finished";
             }
         });
     }
-    else {
+    else if (initState === "Finished"){
         mapInterfaceRef.invokeMethodAsync("HandleOnMapLoadAsync");
     }
 
@@ -112,13 +116,19 @@ export function removeControl(id) {
     }
 }
 
-export function addEventlistner(onEventId, forLayer, mapInterfaceRef) {
+export function addLayerEventlistner(onEventId, forLayer, mapInterfaceRef) {
     window.map.on(onEventId, forLayer, (e) => {
-        mapInterfaceRef.invokeMethodAsync("HandleEvent", onEventId, forLayer);
+        mapInterfaceRef.invokeMethodAsync("HandleLayerEvent", onEventId, forLayer);
     });
 }
 
-export function addOnLayerClickEventlistner(forLayer, mapInterfaceRef) {
+export function addMapEventlistner(onEventId, mapInterfaceRef) {
+    window.map.on(onEventId, () => {
+        mapInterfaceRef.invokeMethodAsync("HandleMapEvent", onEventId);
+    });
+}
+
+export function addOnLayerClickEventlistner(forLayer, mapInterfaceRef, changeCursorOnHover) {
     window.map.on('click', forLayer, (e) => {
         e.clickOnLayer = true;
 
@@ -131,6 +141,17 @@ export function addOnLayerClickEventlistner(forLayer, mapInterfaceRef) {
 
         mapInterfaceRef.invokeMethodAsync("HandleLayerClickEvent", forLayer, e.lngLat.lat, e.lngLat.lng, properties);
     });
+
+    if (changeCursorOnHover) {
+        map.on('mouseenter', forLayer, (e) => {
+            // Change the cursor style as a UI indicator.
+            map.getCanvas().style.cursor = 'pointer';
+        });
+
+        map.on('mouseleave', forLayer, () => {
+            map.getCanvas().style.cursor = '';
+        });
+    }
 }
 
 export function addOnMapClickEventlistner(mapInterfaceRef) {

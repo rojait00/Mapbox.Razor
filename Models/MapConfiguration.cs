@@ -26,6 +26,9 @@ namespace Mapbox.Razor.Models
 
         [JsonIgnore]
         public List<LayerEvent> LayerEventHandler { get; set; } = new();
+        
+        [JsonIgnore]
+        public List<MapEvent> MapEventHandler { get; set; } = new();
 
         [JsonIgnore]
         public MapClickEvent? MapClickHandler { get; set; } = null;
